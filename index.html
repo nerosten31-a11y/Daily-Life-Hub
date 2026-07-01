@@ -621,11 +621,11 @@
     }
 
     .emoji-btn {
-      width: 34px; height: 34px;
+      width: 40px; height: 40px;
       border: 1.5px solid var(--border2);
-      border-radius: 7px;
+      border-radius: 8px;
       background: var(--surface2);
-      font-size: 16px;
+      font-size: 20px;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -772,13 +772,43 @@ const auth  = getAuth(fbApp);
 const db    = getFirestore(fbApp);
 
 // ── CONSTANTS ──
-const EMOJIS = ['💰','📈','📊','💵','🏦','🏋️','💪','🥊','🏃','🧘','📚','✏️','🎓','📝','🎯','🌟','💡','🚀','⚡','🔑','🎮','🎵','🎨','🎬','🌍','✈️','🏠','❤️','🍕','💻','🔧','⚙️','📱','🛒','🌱','🧠','🏆','🔥','💎','🎪'];
-
-const COLORS = [
-  '#7c6af7','#a855f7','#3b82f6','#06b6d4',
-  '#14b8a6','#22c55e','#84cc16','#eab308',
-  '#f97316','#ef4444','#f43f5e','#ec4899',
+const EMOJIS = [
+  '💰','📈','📊','💵','🏦','💳','🪙','📉',
+  '🏋️','💪','🥊','🏃','🧘','⚽','🏀','🎾','🏊','🚴','🥋','🎯',
+  '📚','✏️','🎓','📝','🔬','🧪','📐','🖥️',
+  '🚀','⚡','💡','🔑','🌟','🎪','🏆','💎','🔥','🧠',
+  '🎮','🎵','🎨','🎬','🎤','🎧','📸','🕹️',
+  '🌍','✈️','🏖️','🗺️','🏕️','🚗','🛳️','🏔️',
+  '🏠','❤️','🍕','🍜','☕','🐾','🌱','🌸',
+  '💻','🔧','⚙️','📱','🛒','📦','🤝','📣',
 ];
+
+// Gem-toned, vibrant, dark-mode-optimised palette
+const COLORS = [
+  '#6d5dfc', // sapphire
+  '#10b981', // emerald
+  '#f59e0b', // amber
+  '#ef4444', // ruby
+  '#06b6d4', // cyan
+  '#a855f7', // amethyst
+  '#f97316', // topaz
+  '#14b8a6', // teal
+  '#e879f9', // fuchsia
+  '#3b82f6', // cobalt
+  '#84cc16', // lime
+  '#f43f5e', // rose
+];
+
+// Returns next unused color, cycling through palette
+function nextColor() {
+  const usedColors = categories.map(c => c.color);
+  // Try to find a color not yet used
+  for (const c of COLORS) {
+    if (!usedColors.includes(c)) return c;
+  }
+  // All used — cycle by index
+  return COLORS[categories.length % COLORS.length];
+}
 
 // ── STATE ──
 let currentUser = null;
@@ -940,10 +970,12 @@ document.getElementById('sidebar-add-cat-btn').onclick = () => {
     { type:'custom', id:'emoji', render: () => {
       const div = document.createElement('div');
       div.innerHTML = `
-        <div class="picker-label" style="margin-bottom:6px">Icon <span style="color:var(--text-muted);font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></div>
-        <div class="emoji-grid" id="emoji-grid">
-          <button class="emoji-btn selected" data-emoji="">✕</button>
-          ${EMOJIS.map(e=>`<button class="emoji-btn" data-emoji="${e}">${e}</button>`).join('')}
+        <div class="picker-label" style="margin-bottom:8px">Icon <span style="color:var(--text-muted);font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></div>
+        <div style="max-height:160px;overflow-y:auto;border:1px solid var(--border2);border-radius:8px;padding:8px;margin-bottom:4px">
+          <div class="emoji-grid" id="emoji-grid">
+            <button class="emoji-btn selected" data-emoji="" title="No icon">✕</button>
+            ${EMOJIS.map(e=>`<button class="emoji-btn" data-emoji="${e}">${e}</button>`).join('')}
+          </div>
         </div>
       `;
       div.querySelector('#emoji-grid').onclick = ev => {
@@ -957,8 +989,7 @@ document.getElementById('sidebar-add-cat-btn').onclick = () => {
     }}
   ], 'Create Category', async vals => {
     if (!vals.name) return;
-    // Auto-assign next color in sequence
-    const autoColor = COLORS[categories.length % COLORS.length];
+    const autoColor = nextColor();
     const id = await addDoc(col('categories'), {
       name: vals.name,
       emoji: selEmoji || '',
