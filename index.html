@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Daily Life Hub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0c0c0c;
+      --surface: #161616;
+      --surface2: #1f1f1f;
+      --surface3: #282828;
+      --border: #2c2c2c;
+      --border2: #383838;
+      --accent: #7c6af7;
+      --accent-dim: rgba(124,106,247,0.12);
+      --accent-hover: #8f7ef9;
+      --text: #e8e8e8;
+      --text-sub: #888;
+      --text-muted: #4a4a4a;
+      --success: #4ade80;
+      --danger: #ef4444;
+      --sidebar-w: 256px;
+      --habits-h: 56px;
+      --r: 8px;
+      --r-sm: 5px;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ─── LOGIN ─── */
+    #login-page {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: var(--bg);
+    }
+
+    .login-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 52px 44px;
+      text-align: center;
+      width: 360px;
+    }
+
+    .login-logo {
+      width: 48px;
+      height: 48px;
+      background: var(--accent);
+      border-radius: 12px;
+      margin: 0 auto 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+
+    .login-card h1 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+      margin-bottom: 8px;
+    }
+
+    .login-card p {
+      color: var(--text-sub);
+      font-size: 13px;
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+
+    .google-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 12px 20px;
+      background: #fff;
+      color: #1a1a1a;
+      border: none;
+      border-radius: var(--r);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .google-btn:hover { opacity: 0.88; }
+
+    /* ─── APP ─── */
+    #app { display: none; }
+
+    /* Habits Bar */
+    #habits-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: var(--habits-h);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 8px;
+      z-index: 100;
+      overflow: hidden;
+    }
+
+    .habits-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    #habits-scroll {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      overflow-x: auto;
+      flex: 1;
+      min-width: 0;
+    }
+
+    #habits-scroll::-webkit-scrollbar { display: none; }
+
+    .habit-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 5px 13px 5px 8px;
+      font-size: 12px;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: border-color 0.15s;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    .habit-chip:hover { border-color: var(--accent); }
+
+    .habit-ring {
+      width: 15px; height: 15px;
+      border: 1.5px solid var(--text-muted);
+      border-radius: 50%;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+
+    @keyframes chipOut {
+      0%   { opacity: 1; transform: scale(1);   max-width: 200px; }
+      60%  { opacity: 0; transform: scale(0.85); }
+      100% { opacity: 0; max-width: 0; padding: 0; margin: 0; border: none; }
+    }
+
+    .habit-chip.done { animation: chipOut 0.45s forwards; }
+
+    .all-done-msg {
+      font-size: 12px;
+      color: var(--success);
+      font-weight: 500;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .add-habit-btn {
+      background: none;
+      border: 1px dashed var(--border2);
+      border-radius: 20px;
+      color: var(--text-muted);
+      padding: 5px 12px;
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+
+    .add-habit-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .signout-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-family: 'Inter', sans-serif;
+      font-size: 11px;
+      padding: 5px 10px;
+      border-radius: var(--r-sm);
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+
+    .signout-btn:hover { border-color: var(--danger); color: var(--danger); }
+
+    .menu-btn {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--text-sub);
+      cursor: pointer;
+      font-size: 18px;
+      padding: 4px 6px;
+      flex-shrink: 0;
+      align-items: center;
+    }
+
+    /* Sidebar */
+    #sidebar {
+      position: fixed;
+      top: var(--habits-h);
+      left: 0;
+      bottom: 0;
+      width: var(--sidebar-w);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 8px 0 24px;
+      z-index: 50;
+    }
+
+    #sidebar::-webkit-scrollbar { width: 3px; }
+    #sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .sidebar-home-btn {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 14px;
+      margin: 0 6px 2px;
+      border-radius: var(--r-sm);
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text-sub);
+      transition: background 0.1s;
+    }
+
+    .sidebar-home-btn:hover { background: var(--surface2); color: var(--text); }
+    .sidebar-home-btn.active { background: var(--surface2); color: var(--text); }
+
+    .sidebar-divider { height: 1px; background: var(--border); margin: 8px 14px; }
+
+    .sidebar-section-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 14px 4px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+    }
+
+    .sidebar-add-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 17px;
+      line-height: 1;
+      padding: 0 3px;
+      transition: color 0.15s;
+    }
+
+    .sidebar-add-btn:hover { color: var(--accent); }
+
+    .category-header {
+      display: flex;
+      align-items: center;
+      padding: 7px 10px 7px 14px;
+      margin: 1px 6px;
+      border-radius: var(--r-sm);
+      cursor: pointer;
+      gap: 6px;
+      transition: background 0.1s;
+    }
+
+    .category-header:hover { background: var(--surface2); }
+    .category-header.active { background: var(--surface2); }
+
+    .cat-arrow {
+      font-size: 9px;
+      color: var(--text-muted);
+      transition: transform 0.15s;
+      flex-shrink: 0;
+      width: 10px;
+    }
+
+    .cat-arrow.open { transform: rotate(90deg); }
+
+    .cat-name {
+      font-size: 13px;
+      font-weight: 500;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .cat-actions { display: none; gap: 2px; }
+    .category-header:hover .cat-actions { display: flex; }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 2px 5px;
+      font-size: 11px;
+      border-radius: 3px;
+      transition: all 0.1s;
+    }
+
+    .icon-btn:hover { background: var(--surface3); color: var(--text); }
+
+    .subcategories { padding-left: 14px; }
+
+    .sub-item {
+      display: flex;
+      align-items: center;
+      padding: 5px 10px 5px 12px;
+      margin: 1px 6px;
+      border-radius: var(--r-sm);
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--text-sub);
+      gap: 8px;
+      transition: background 0.1s;
+    }
+
+    .sub-item:hover { background: var(--surface2); color: var(--text); }
+    .sub-item.active { background: var(--surface2); color: var(--text); }
+
+    .sub-dot {
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .sub-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sub-actions { display: none; }
+    .sub-item:hover .sub-actions { display: flex; gap: 2px; }
+
+    /* Main */
+    #main {
+      margin-left: var(--sidebar-w);
+      margin-top: var(--habits-h);
+      min-height: calc(100vh - var(--habits-h));
+      padding: 36px 44px 60px;
+      max-width: 820px;
+    }
+
+    /* Home */
+    .home-greeting {
+      font-size: 30px;
+      font-weight: 700;
+      letter-spacing: -0.6px;
+      margin-bottom: 6px;
+    }
+
+    .home-sub {
+      font-size: 14px;
+      color: var(--text-sub);
+      margin-bottom: 32px;
+      line-height: 1.5;
+    }
+
+    .stats-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 36px;
+      flex-wrap: wrap;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 18px 22px;
+      flex: 1;
+      min-width: 110px;
+    }
+
+    .stat-num {
+      font-size: 30px;
+      font-weight: 700;
+      letter-spacing: -1px;
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .stat-label { font-size: 11px; color: var(--text-sub); }
+
+    /* Content Header */
+    .content-header { margin-bottom: 30px; }
+
+    .content-breadcrumb {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .content-title {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    /* Sections */
+    .section { margin-bottom: 36px; }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .section-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+    }
+
+    .section-add-btn {
+      background: none;
+      border: none;
+      color: var(--accent);
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 3px 8px;
+      border-radius: var(--r-sm);
+      transition: background 0.1s;
+    }
+
+    .section-add-btn:hover { background: var(--accent-dim); }
+
+    /* Todos */
+    .todo-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      margin-bottom: 5px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+      overflow: hidden;
+    }
+
+    .todo-item:hover { border-color: var(--border2); background: var(--surface2); }
+
+    .todo-box {
+      width: 17px; height: 17px;
+      border: 1.5px solid var(--border2);
+      border-radius: 4px;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+
+    @keyframes todoSlide {
+      0%   { opacity: 1; max-height: 60px; padding-top: 10px; padding-bottom: 10px; margin-bottom: 5px; }
+      40%  { opacity: 0.4; }
+      100% { opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0; margin-bottom: 0; border-width: 0; }
+    }
+
+    .todo-item.completing {
+      animation: todoSlide 0.38s ease-in forwards;
+    }
+
+    .todo-item.completing .todo-box {
+      background: var(--success);
+      border-color: var(--success);
+    }
+
+    .todo-text { font-size: 13px; flex: 1; line-height: 1.4; }
+
+    .todo-del {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 13px;
+      padding: 2px 5px;
+      border-radius: 3px;
+      transition: all 0.1s;
+      flex-shrink: 0;
+    }
+
+    .todo-item:hover .todo-del { display: block; }
+    .todo-del:hover { background: rgba(239,68,68,0.1); color: var(--danger); }
+
+    /* Links */
+    .link-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      margin-bottom: 5px;
+      text-decoration: none;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .link-row:hover { border-color: var(--accent); background: var(--surface2); }
+
+    .link-fav {
+      width: 16px; height: 16px;
+      border-radius: 3px;
+      flex-shrink: 0;
+      object-fit: contain;
+    }
+
+    .link-title {
+      font-size: 13px;
+      color: var(--text);
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .link-domain {
+      font-size: 11px;
+      color: var(--text-muted);
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .link-del {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 13px;
+      padding: 2px 5px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    .link-row:hover .link-del { display: block; }
+    .link-del:hover { background: rgba(239,68,68,0.1); color: var(--danger); }
+
+    /* Notes */
+    .notes-area {
+      width: 100%;
+      min-height: 140px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 14px 16px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      line-height: 1.7;
+      resize: vertical;
+      transition: border-color 0.15s;
+    }
+
+    .notes-area:focus { outline: none; border-color: var(--accent); }
+    .notes-area::placeholder { color: var(--text-muted); }
+
+    /* Empty states */
+    .empty-line {
+      font-size: 12px;
+      color: var(--text-muted);
+      padding: 6px 0;
+    }
+
+    /* Inputs */
+    .input-field {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 10px 12px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      transition: border-color 0.15s;
+      margin-bottom: 8px;
+    }
+
+    .input-field:focus { outline: none; border-color: var(--accent); }
+    .input-field::placeholder { color: var(--text-muted); }
+
+    /* Buttons */
+    .btn-primary {
+      background: var(--accent);
+      border: none;
+      border-radius: var(--r);
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 9px 18px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-primary:hover { background: var(--accent-hover); }
+
+    .btn-ghost {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      color: var(--text-sub);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      padding: 9px 18px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-ghost:hover { border-color: var(--border2); color: var(--text); }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      padding: 24px;
+      width: 380px;
+      max-width: 90vw;
+    }
+
+    .modal h3 { font-size: 15px; font-weight: 600; margin-bottom: 16px; }
+
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 4px;
+    }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: var(--r);
+      padding: 9px 16px;
+      font-size: 12px;
+      color: var(--text-sub);
+      z-index: 300;
+      transform: translateY(60px);
+      opacity: 0;
+      transition: all 0.22s;
+      pointer-events: none;
+    }
+
+    #toast.show { transform: translateY(0); opacity: 1; }
+
+    /* Mobile */
+    @media (max-width: 720px) {
+      #sidebar {
+        transform: translateX(-260px);
+        transition: transform 0.25s;
+      }
+
+      #sidebar.open { transform: translateX(0); }
+      #main { margin-left: 0; padding: 24px 20px 48px; }
+      .menu-btn { display: flex !important; }
+      #habits-bar { gap: 6px; }
+    }
+
+    .overlay-bg {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 49;
+    }
+
+    .overlay-bg.open { display: block; }
+  </style>
+</head>
+<body>
+
+<!-- ─── LOGIN ─── -->
+<div id="login-page">
+  <div class="login-card">
+    <div class="login-logo">⚡</div>
+    <h1>Daily Life Hub</h1>
+    <p>Your personal command centre for habits, tasks, goals, and resources — all in one place.</p>
+    <button class="google-btn" onclick="signInWithGoogle()">
+      <svg width="18" height="18" viewBox="0 0 24 24">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg>
+      Continue with Google
+    </button>
+  </div>
+</div>
+
+<!-- ─── APP ─── -->
+<div id="app">
+
+  <!-- Habits Bar -->
+  <div id="habits-bar">
+    <button class="menu-btn" id="menu-btn" onclick="toggleSidebar()">☰</button>
+    <span class="habits-label">Today</span>
+    <div id="habits-scroll"></div>
+    <button class="add-habit-btn" onclick="openAddHabit()">+ Add habit</button>
+    <button class="signout-btn" onclick="doSignOut()">Sign out</button>
+  </div>
+
+  <!-- Sidebar -->
+  <div id="sidebar">
+    <div class="sidebar-home-btn" id="home-btn" onclick="goHome()">
+      <span>🏠</span> Home
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section-label">
+      Categories
+      <button class="sidebar-add-btn" onclick="openAddCategory()" title="New category">+</button>
+    </div>
+    <div id="categories-list"></div>
+  </div>
+
+  <div class="overlay-bg" id="overlay-bg" onclick="closeSidebar()"></div>
+
+  <!-- Main -->
+  <div id="main">
+    <div id="content-area"></div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="handleModalOverlayClick(event)">
+  <div class="modal">
+    <h3 id="modal-title">Add</h3>
+    <input class="input-field" id="modal-input" placeholder="" />
+    <input class="input-field" id="modal-input2" placeholder="" style="display:none" />
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="submitModal()">Add</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+import { initializeApp }        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc,
+  onSnapshot, query, orderBy, serverTimestamp, setDoc, getDoc, where }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+// ─── CONFIG ───
+const firebaseConfig = {
+  apiKey: "AIzaSyBVYZFLkqc1lqHf7wxwGXAY_yRxJnxQhvQ",
+  authDomain: "daily-life-16889.firebaseapp.com",
+  projectId: "daily-life-16889",
+  storageBucket: "daily-life-16889.firebasestorage.app",
+  messagingSenderId: "355962987531",
+  appId: "1:355962987531:web:6b40933fb040dee462530e",
+  measurementId: "G-7KCY4ZGYH5"
+};
+
+const fbApp   = initializeApp(firebaseConfig);
+const auth    = getAuth(fbApp);
+const db      = getFirestore(fbApp);
+
+// ─── STATE ───
+let currentUser   = null;
+let currentView   = { type: 'home', catId: null, subId: null };
+let categories    = [];
+let subcategories = [];
+let habits        = [];
+let openCats      = new Set();
+let unsubs        = [];
+let modalCb       = null;
+
+// ─── HELPERS ───
+const col  = name  => collection(db, 'users', currentUser.uid, name);
+const dref = (name, id) => doc(db, 'users', currentUser.uid, name, id);
+const today = () => new Date().toISOString().split('T')[0];
+
+// ─── AUTH ───
+window.signInWithGoogle = async () => {
+  try { await signInWithPopup(auth, new GoogleAuthProvider()); }
+  catch { showToast('Sign-in failed — try again'); }
+};
+
+window.doSignOut = async () => {
+  unsubs.forEach(u => u()); unsubs = [];
+  await signOut(auth);
+};
+
+onAuthStateChanged(auth, user => {
+  currentUser = user;
+  if (user) {
+    document.getElementById('login-page').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    initApp();
+  } else {
+    document.getElementById('login-page').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+  }
+});
+
+// ─── INIT ───
+function initApp() {
+  // Listen for habits
+  unsubs.push(onSnapshot(query(col('habits'), orderBy('createdAt')), snap => {
+    habits = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderHabitsBar();
+    if (currentView.type === 'home') renderHome();
+  }));
+
+  // Listen for categories
+  unsubs.push(onSnapshot(query(col('categories'), orderBy('createdAt')), snap => {
+    categories = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderSidebar();
+    if (currentView.type === 'home') renderHome();
+  }));
+
+  // Listen for subcategories
+  unsubs.push(onSnapshot(query(col('subcategories'), orderBy('createdAt')), snap => {
+    subcategories = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderSidebar();
+  }));
+
+  renderHome();
+}
+
+// ─── HABITS BAR ───
+function renderHabitsBar() {
+  const scroll = document.getElementById('habits-scroll');
+  const todayKey = today();
+  const pending = habits.filter(h => !(h.completedDates || []).includes(todayKey));
+
+  scroll.innerHTML = '';
+
+  if (habits.length === 0) {
+    scroll.innerHTML = '<span style="font-size:11px;color:var(--text-muted)">No habits yet — add one →</span>';
+    return;
+  }
+
+  if (pending.length === 0) {
+    scroll.innerHTML = '<span class="all-done-msg">✓ All habits done for today!</span>';
+    return;
+  }
+
+  pending.forEach(h => {
+    const chip = document.createElement('div');
+    chip.className = 'habit-chip';
+    chip.innerHTML = `<div class="habit-ring"></div><span>${escHtml(h.name)}</span>`;
+    chip.onclick = () => completeHabit(h.id, chip);
+    scroll.appendChild(chip);
+  });
+}
+
+async function completeHabit(id, chip) {
+  chip.classList.add('done');
+  const h = habits.find(x => x.id === id);
+  const dates = [...(h.completedDates || []), today()];
+  await updateDoc(dref('habits', id), { completedDates: dates });
+}
+
+window.openAddHabit = () => {
+  openModal('New Daily Habit', '100 push-ups, Daily reading, Boxing practice…', false, async name => {
+    if (!name) return;
+    await addDoc(col('habits'), { name, completedDates: [], createdAt: serverTimestamp() });
+    showToast('Habit added');
+  });
+};
+
+// ─── SIDEBAR ───
+function renderSidebar() {
+  const list = document.getElementById('categories-list');
+  list.innerHTML = '';
+
+  const homeBtn = document.getElementById('home-btn');
+  if (homeBtn) homeBtn.className = 'sidebar-home-btn' + (currentView.type === 'home' ? ' active' : '');
+
+  categories.forEach(cat => {
+    const subs   = subcategories.filter(s => s.catId === cat.id);
+    const isOpen = openCats.has(cat.id);
+    const isCatActive = currentView.catId === cat.id && !currentView.subId;
+
+    const wrap = document.createElement('div');
+
+    wrap.innerHTML = `
+      <div class="category-header${isCatActive ? ' active' : ''}" data-catid="${cat.id}">
+        <span class="cat-arrow${isOpen ? ' open' : ''}">▶</span>
+        <span class="cat-name">${escHtml(cat.name)}</span>
+        <div class="cat-actions">
+          <button class="icon-btn" data-action="addsub" data-catid="${cat.id}" title="Add subcategory">+</button>
+          <button class="icon-btn" data-action="delcat" data-catid="${cat.id}" data-name="${escHtml(cat.name)}" title="Delete">✕</button>
+        </div>
+      </div>
+      ${isOpen ? `<div class="subcategories">${subs.map(s => `
+        <div class="sub-item${currentView.subId === s.id ? ' active' : ''}" data-subid="${s.id}" data-catid="${cat.id}">
+          <div class="sub-dot"></div>
+          <span class="sub-name">${escHtml(s.name)}</span>
+          <div class="sub-actions">
+            <button class="icon-btn" data-action="delsub" data-subid="${s.id}" data-name="${escHtml(s.name)}" title="Delete">✕</button>
+          </div>
+        </div>`).join('')}
+      </div>` : ''}
+    `;
+
+    list.appendChild(wrap);
+  });
+
+  // Event delegation
+  list.onclick = e => {
+    const btn = e.target.closest('[data-action]');
+    if (btn) {
+      e.stopPropagation();
+      const { action, catid, subid, name } = btn.dataset;
+      if (action === 'addsub') openAddSubcategory(catid);
+      if (action === 'delcat') deleteCat(catid, name);
+      if (action === 'delsub') deleteSub(subid, name);
+      return;
+    }
+
+    const subEl = e.target.closest('[data-subid]');
+    if (subEl && !e.target.closest('.sub-actions')) {
+      currentView = { type: 'sub', catId: subEl.dataset.catid, subId: subEl.dataset.subid };
+      renderSidebar();
+      renderContentView();
+      closeSidebar();
+      return;
+    }
+
+    const catEl = e.target.closest('[data-catid]');
+    if (catEl && !e.target.closest('.cat-actions') && !e.target.closest('[data-subid]')) {
+      const id = catEl.dataset.catid;
+      if (openCats.has(id)) openCats.delete(id); else openCats.add(id);
+      currentView = { type: 'cat', catId: id, subId: null };
+      renderSidebar();
+      renderContentView();
+      closeSidebar();
+    }
+  };
+}
+
+// ─── CATEGORY CRUD ───
+window.openAddCategory = () => {
+  openModal('New Category', 'Money, Fitness, School, Self-Improvement…', false, async name => {
+    if (!name) return;
+    await addDoc(col('categories'), { name, createdAt: serverTimestamp() });
+    showToast('Category added');
+  });
+};
+
+function openAddSubcategory(catId) {
+  const cat = categories.find(c => c.id === catId);
+  openModal(`New subcategory in "${cat?.name}"`, 'Day Trading, Reselling, Boxing…', false, async name => {
+    if (!name) return;
+    await addDoc(col('subcategories'), { name, catId, createdAt: serverTimestamp() });
+    openCats.add(catId);
+    showToast('Subcategory added');
+  });
+}
+
+async function deleteCat(id, name) {
+  if (!confirm(`Delete "${name}" and all its content?`)) return;
+  await deleteDoc(dref('categories', id));
+  if (currentView.catId === id) { currentView = { type: 'home' }; renderHome(); }
+  showToast('Deleted');
+}
+
+async function deleteSub(id, name) {
+  if (!confirm(`Delete "${name}"?`)) return;
+  await deleteDoc(dref('subcategories', id));
+  if (currentView.subId === id) { currentView = { type: 'home' }; renderHome(); }
+  showToast('Deleted');
+}
+
+// ─── HOME ───
+window.goHome = () => {
+  currentView = { type: 'home', catId: null, subId: null };
+  renderSidebar();
+  renderHome();
+  closeSidebar();
+};
+
+function renderHome() {
+  const area = document.getElementById('content-area');
+  const name = currentUser?.displayName?.split(' ')[0] || 'there';
+  const h = new Date().getHours();
+  const greeting = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  const todayKey = today();
+  const left = habits.filter(x => !(x.completedDates || []).includes(todayKey)).length;
+
+  area.innerHTML = `
+    <div>
+      <div class="home-greeting">${greeting}, ${name} 👋</div>
+      <div class="home-sub">Select a category from the sidebar, or add a new one with the <strong>+</strong> button.</div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-num">${categories.length}</div><div class="stat-label">Categories</div></div>
+        <div class="stat-card"><div class="stat-num">${habits.length}</div><div class="stat-label">Daily Habits</div></div>
+        <div class="stat-card"><div class="stat-num">${left}</div><div class="stat-label">Habits left today</div></div>
+      </div>
+      ${categories.length === 0 ? `
+        <div style="text-align:center;padding:48px 20px;color:var(--text-muted);font-size:13px">
+          <div style="font-size:36px;margin-bottom:12px">📂</div>
+          No categories yet — click the <strong style="color:var(--text-sub)">+</strong> in the sidebar to add your first one.
+        </div>` : ''}
+    </div>
+  `;
+}
+
+// ─── CONTENT VIEW ───
+function renderContentView() {
+  const area    = document.getElementById('content-area');
+  const cat     = categories.find(c => c.id === currentView.catId);
+  const sub     = currentView.subId ? subcategories.find(s => s.id === currentView.subId) : null;
+  if (!cat) return;
+
+  const title      = sub ? sub.name : cat.name;
+  const breadcrumb = sub ? `${cat.name} / ${sub.name}` : cat.name;
+  const ctxId      = currentView.subId || currentView.catId;
+
+  area.innerHTML = `
+    <div class="content-header">
+      <div class="content-breadcrumb">${escHtml(breadcrumb)}</div>
+      <div class="content-title">${escHtml(title)}</div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <span class="section-label">To-Do</span>
+        <button class="section-add-btn" id="add-todo-btn">+ Add task</button>
+      </div>
+      <div id="todos-${ctxId}"><div class="empty-line">Loading…</div></div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <span class="section-label">Resources & Links</span>
+        <button class="section-add-btn" id="add-link-btn">+ Add link</button>
+      </div>
+      <div id="links-${ctxId}"><div class="empty-line">Loading…</div></div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <span class="section-label">Notes</span>
+        <span style="font-size:10px;color:var(--text-muted)">Auto-saves on blur</span>
+      </div>
+      <textarea class="notes-area" id="notes-${ctxId}" placeholder="Paste in Google Doc content, write notes, anything goes…"></textarea>
+    </div>
+  `;
+
+  document.getElementById('add-todo-btn').onclick = () => addTodo(ctxId);
+  document.getElementById('add-link-btn').onclick = () => addLink(ctxId);
+
+  loadTodos(ctxId);
+  loadLinks(ctxId);
+  loadNotes(ctxId);
+}
+
+// ─── TODOS ───
+function loadTodos(ctxId) {
+  const q = query(col('todos'), where('ctxId', '==', ctxId), orderBy('createdAt'));
+  const unsub = onSnapshot(q, snap => {
+    const all     = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const pending = all.filter(t => !t.done);
+    const el      = document.getElementById(`todos-${ctxId}`);
+    if (!el) return unsub();
+
+    if (pending.length === 0) {
+      el.innerHTML = '<div class="empty-line">No tasks yet — add your first one above.</div>';
+      return;
+    }
+
+    el.innerHTML = '';
+    pending.forEach(t => {
+      const item = document.createElement('div');
+      item.className = 'todo-item';
+      item.id = `todo-${t.id}`;
+      item.innerHTML = `
+        <div class="todo-box"></div>
+        <span class="todo-text">${escHtml(t.text)}</span>
+        <button class="todo-del" data-id="${t.id}">✕</button>
+      `;
+      item.querySelector('.todo-box').onclick = () => completeTodo(t.id, item);
+      item.querySelector('.todo-del').onclick = e => { e.stopPropagation(); removeTodo(t.id); };
+      el.appendChild(item);
+    });
+  });
+  unsubs.push(unsub);
+}
+
+function addTodo(ctxId) {
+  openModal('New Task', 'What do you need to do?', false, async text => {
+    if (!text) return;
+    await addDoc(col('todos'), { text, ctxId, done: false, createdAt: serverTimestamp() });
+    showToast('Task added');
+  });
+}
+
+async function completeTodo(id, el) {
+  el.classList.add('completing');
+  await updateDoc(dref('todos', id), { done: true });
+  setTimeout(() => el.remove(), 380);
+}
+
+async function removeTodo(id) {
+  await deleteDoc(dref('todos', id));
+  showToast('Task removed');
+}
+
+// ─── LINKS ───
+function loadLinks(ctxId) {
+  const q = query(col('links'), where('ctxId', '==', ctxId), orderBy('createdAt'));
+  const unsub = onSnapshot(q, snap => {
+    const links = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const el    = document.getElementById(`links-${ctxId}`);
+    if (!el) return unsub();
+
+    if (links.length === 0) {
+      el.innerHTML = '<div class="empty-line">No links yet — add YouTube videos, websites, resources…</div>';
+      return;
+    }
+
+    el.innerHTML = '';
+    links.forEach(lk => {
+      let host = '';
+      try { host = new URL(lk.url).hostname.replace('www.', ''); } catch {}
+
+      const row = document.createElement('div');
+      row.innerHTML = `
+        <a class="link-row" href="${escHtml(lk.url)}" target="_blank" rel="noopener">
+          <img class="link-fav" src="https://www.google.com/s2/favicons?domain=${host}&sz=32" onerror="this.style.display='none'" />
+          <span class="link-title">${escHtml(lk.title || host)}</span>
+          <span class="link-domain">${escHtml(host)}</span>
+          <button class="link-del" data-id="${lk.id}">✕</button>
+        </a>
+      `;
+      row.querySelector('.link-del').onclick = e => { e.preventDefault(); e.stopPropagation(); removeLink(lk.id); };
+      el.appendChild(row);
+    });
+  });
+  unsubs.push(unsub);
+}
+
+function addLink(ctxId) {
+  openModal('Add Link', 'Link title (e.g. Day Trading Tutorial)', true, async (title, url) => {
+    if (!url) return;
+    if (!url.startsWith('http')) url = 'https://' + url;
+    await addDoc(col('links'), { title: title || url, url, ctxId, createdAt: serverTimestamp() });
+    showToast('Link saved');
+  });
+}
+
+async function removeLink(id) {
+  await deleteDoc(dref('links', id));
+  showToast('Link removed');
+}
+
+// ─── NOTES ───
+async function loadNotes(ctxId) {
+  const snap = await getDoc(dref('notes', ctxId));
+  const ta   = document.getElementById(`notes-${ctxId}`);
+  if (ta && snap.exists()) ta.value = snap.data().content || '';
+  if (ta) ta.onblur = () => saveNotes(ctxId);
+}
+
+async function saveNotes(ctxId) {
+  const ta = document.getElementById(`notes-${ctxId}`);
+  if (!ta) return;
+  await setDoc(dref('notes', ctxId), { content: ta.value, updated: serverTimestamp() });
+  showToast('Notes saved');
+}
+
+// ─── MODAL ───
+function openModal(title, p1, showUrl, cb) {
+  const i1 = document.getElementById('modal-input');
+  const i2 = document.getElementById('modal-input2');
+  document.getElementById('modal-title').textContent = title;
+  i1.placeholder = p1;
+  i1.value = '';
+  i2.value = '';
+  i2.style.display = showUrl ? 'block' : 'none';
+  if (showUrl) i2.placeholder = 'URL  (e.g. https://youtube.com/…)';
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(() => i1.focus(), 60);
+  modalCb = cb;
+  const submit = () => submitModal();
+  i1.onkeydown = e => e.key === 'Enter' && submit();
+  i2.onkeydown = e => e.key === 'Enter' && submit();
+}
+
+window.handleModalOverlayClick = e => { if (e.target === e.currentTarget) closeModal(); };
+window.closeModal  = () => { document.getElementById('modal-overlay').classList.remove('open'); modalCb = null; };
+window.submitModal = () => {
+  const v1 = document.getElementById('modal-input').value.trim();
+  const v2 = document.getElementById('modal-input2').value.trim();
+  if (modalCb) modalCb(v1, v2);
+  closeModal();
+};
+
+// ─── SIDEBAR MOBILE ───
+window.toggleSidebar = () => {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay-bg').classList.toggle('open');
+};
+
+window.closeSidebar = () => {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay-bg').classList.remove('open');
+};
+
+// ─── TOAST ───
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ─── UTILS ───
+function escHtml(s = '') {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
