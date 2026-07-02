@@ -15,8 +15,8 @@
       --surface3: #222222;
       --border: #252525;
       --border2: #333333;
-      --accent: #7c6af7;
-      --accent-dim: rgba(124,106,247,0.13);
+      --accent: #6d5dfc;
+      --accent-dim: rgba(109,93,252,0.12);
       --text: #ececec;
       --text-sub: #777;
       --text-muted: #444;
@@ -29,21 +29,10 @@
       --r-lg: 12px;
     }
 
-    body {
-      font-family: 'Inter', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
 
     /* ── LOGIN ── */
-    #login-page {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-    }
+    #login-page { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
 
     .login-card {
       background: var(--surface);
@@ -56,48 +45,25 @@
 
     .login-logo {
       width: 52px; height: 52px;
-      background: linear-gradient(135deg, #7c6af7, #a855f7);
+      background: linear-gradient(135deg, #6d5dfc, #a855f7);
       border-radius: 14px;
       margin: 0 auto 22px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       font-size: 24px;
-      box-shadow: 0 0 32px rgba(124,106,247,0.35);
+      box-shadow: 0 0 36px rgba(109,93,252,0.4);
     }
 
-    .login-card h1 {
-      font-size: 21px;
-      font-weight: 700;
-      letter-spacing: -0.4px;
-      margin-bottom: 8px;
-    }
-
-    .login-card p {
-      color: var(--text-sub);
-      font-size: 13px;
-      line-height: 1.6;
-      margin-bottom: 32px;
-    }
+    .login-card h1 { font-size: 21px; font-weight: 700; letter-spacing: -0.4px; margin-bottom: 8px; }
+    .login-card p { color: var(--text-sub); font-size: 13px; line-height: 1.6; margin-bottom: 32px; }
 
     .google-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      width: 100%;
-      padding: 12px 20px;
-      background: #fff;
-      color: #1a1a1a;
-      border: none;
-      border-radius: var(--r);
-      font-family: 'Inter', sans-serif;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: opacity 0.15s;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: 100%; padding: 12px 20px;
+      background: #fff; color: #1a1a1a;
+      border: none; border-radius: var(--r);
+      font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500;
+      cursor: pointer; transition: opacity 0.15s;
     }
-
     .google-btn:hover { opacity: 0.88; }
 
     /* ── APP ── */
@@ -105,66 +71,33 @@
 
     /* ── HABITS BAR ── */
     #habits-bar {
-      position: fixed;
-      top: 0; left: 0; right: 0;
+      position: fixed; top: 0; left: 0; right: 0;
       height: var(--habits-h);
       background: var(--surface);
       border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      padding: 0 16px;
-      gap: 8px;
-      z-index: 100;
+      display: flex; align-items: center;
+      padding: 0 16px; gap: 8px; z-index: 100;
     }
 
-    .habits-label {
-      font-size: 10px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--text-muted);
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
+    .habits-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-muted); white-space: nowrap; flex-shrink: 0; }
 
-    #habits-scroll {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-      overflow-x: auto;
-      flex: 1;
-      min-width: 0;
-    }
+    #habits-scroll { display: flex; gap: 6px; align-items: center; overflow-x: auto; flex: 1; min-width: 0; }
     #habits-scroll::-webkit-scrollbar { display: none; }
 
     .habit-chip {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--surface2);
-      border: 1px solid var(--border2);
-      border-radius: 20px;
-      padding: 4px 12px 4px 8px;
-      font-size: 12px;
-      white-space: nowrap;
-      cursor: pointer;
+      display: flex; align-items: center; gap: 6px;
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: 20px; padding: 4px 12px 4px 8px;
+      font-size: 12px; white-space: nowrap; cursor: pointer;
       transition: border-color 0.15s, transform 0.1s;
-      user-select: none;
-      flex-shrink: 0;
+      user-select: none; flex-shrink: 0;
     }
-
     .habit-chip:hover { border-color: var(--accent); transform: translateY(-1px); }
 
-    .habit-ring {
-      width: 14px; height: 14px;
-      border: 1.5px solid var(--text-muted);
-      border-radius: 50%;
-      flex-shrink: 0;
-      transition: all 0.2s;
-    }
+    .habit-ring { width: 14px; height: 14px; border: 1.5px solid var(--text-muted); border-radius: 50%; flex-shrink: 0; }
 
     @keyframes chipOut {
-      0%   { opacity: 1; max-width: 180px; transform: scale(1); }
+      0%   { opacity: 1; max-width: 180px; }
       50%  { opacity: 0; transform: scale(0.8); }
       100% { opacity: 0; max-width: 0; padding: 0; margin: 0; border: 0; }
     }
@@ -172,292 +105,166 @@
     .all-done-msg { font-size: 12px; color: var(--success); font-weight: 500; white-space: nowrap; }
 
     .add-habit-btn {
-      background: none;
-      border: 1px dashed var(--border2);
-      border-radius: 20px;
-      color: var(--text-muted);
-      padding: 4px 12px;
-      font-family: 'Inter', sans-serif;
-      font-size: 12px;
-      cursor: pointer;
-      white-space: nowrap;
-      flex-shrink: 0;
-      transition: all 0.15s;
+      background: none; border: 1px dashed var(--border2); border-radius: 20px;
+      color: var(--text-muted); padding: 4px 12px;
+      font-family: 'Inter', sans-serif; font-size: 12px; cursor: pointer;
+      white-space: nowrap; flex-shrink: 0; transition: all 0.15s;
     }
     .add-habit-btn:hover { border-color: var(--accent); color: var(--accent); }
 
     .signout-btn {
-      background: none;
-      border: 1px solid var(--border);
-      color: var(--text-muted);
-      font-family: 'Inter', sans-serif;
-      font-size: 11px;
-      padding: 5px 10px;
-      border-radius: var(--r-sm);
-      cursor: pointer;
-      flex-shrink: 0;
-      transition: all 0.15s;
+      background: none; border: 1px solid var(--border); color: var(--text-muted);
+      font-family: 'Inter', sans-serif; font-size: 11px; padding: 5px 10px;
+      border-radius: var(--r-sm); cursor: pointer; flex-shrink: 0; transition: all 0.15s;
     }
     .signout-btn:hover { border-color: var(--danger); color: var(--danger); }
 
-    .menu-btn {
-      display: none;
-      background: none;
-      border: none;
-      color: var(--text-sub);
-      cursor: pointer;
-      font-size: 18px;
-      padding: 4px 6px;
-      flex-shrink: 0;
-    }
+    .menu-btn { display: none; background: none; border: none; color: var(--text-sub); cursor: pointer; font-size: 18px; padding: 4px 6px; flex-shrink: 0; }
 
     /* ── SIDEBAR ── */
     #sidebar {
-      position: fixed;
-      top: var(--habits-h);
-      left: 0; bottom: 0;
-      width: var(--sidebar-w);
-      background: var(--surface);
+      position: fixed; top: var(--habits-h); left: 0; bottom: 0;
+      width: var(--sidebar-w); background: var(--surface);
       border-right: 1px solid var(--border);
-      overflow-y: auto;
-      padding: 10px 0 32px;
-      z-index: 50;
+      overflow-y: auto; padding: 10px 0 32px; z-index: 50;
     }
     #sidebar::-webkit-scrollbar { width: 3px; }
     #sidebar::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
 
     .sidebar-home-btn {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      padding: 8px 14px;
-      margin: 0 6px 2px;
-      border-radius: var(--r-sm);
-      cursor: pointer;
-      font-size: 13px;
-      color: var(--text-sub);
-      transition: background 0.1s;
+      display: flex; align-items: center; gap: 9px;
+      padding: 8px 14px; margin: 0 6px 2px;
+      border-radius: var(--r-sm); cursor: pointer;
+      font-size: 13px; color: var(--text-sub); transition: background 0.1s;
     }
-    .sidebar-home-btn:hover,
-    .sidebar-home-btn.active { background: var(--surface2); color: var(--text); }
+    .sidebar-home-btn:hover, .sidebar-home-btn.active { background: var(--surface2); color: var(--text); }
 
     .sidebar-divider { height: 1px; background: var(--border); margin: 8px 14px; }
 
     .sidebar-section-label {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      display: flex; align-items: center; justify-content: space-between;
       padding: 6px 14px 4px;
-      font-size: 10px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--text-muted);
+      font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-muted);
     }
 
-    .sidebar-add-btn {
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      cursor: pointer;
-      font-size: 18px;
-      line-height: 1;
-      padding: 0 3px;
-      transition: color 0.15s;
-    }
+    .sidebar-add-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 18px; line-height: 1; padding: 0 3px; transition: color 0.15s; }
     .sidebar-add-btn:hover { color: var(--accent); }
 
     .category-header {
-      display: flex;
-      align-items: center;
-      padding: 7px 10px 7px 12px;
-      margin: 1px 6px;
-      border-radius: var(--r-sm);
-      cursor: pointer;
-      gap: 7px;
+      display: flex; align-items: center;
+      padding: 7px 10px 7px 12px; margin: 1px 6px;
+      border-radius: var(--r-sm); cursor: pointer; gap: 8px;
       transition: background 0.1s;
-      border-left: 2px solid transparent;
+      border-left: 3px solid transparent;
     }
     .category-header:hover { background: var(--surface2); }
     .category-header.active { background: var(--surface2); }
 
-    .cat-arrow {
-      font-size: 8px;
-      color: var(--text-muted);
-      transition: transform 0.15s;
-      flex-shrink: 0;
-    }
+    .cat-arrow { font-size: 8px; color: var(--text-muted); transition: transform 0.15s; flex-shrink: 0; }
     .cat-arrow.open { transform: rotate(90deg); }
 
-    .cat-emoji { font-size: 15px; flex-shrink: 0; line-height: 1; }
+    .cat-color-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
-    .cat-name {
-      font-size: 13px;
-      font-weight: 500;
-      flex: 1;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
+    .cat-name { font-size: 13px; font-weight: 500; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
     .cat-actions { display: none; gap: 2px; }
     .category-header:hover .cat-actions { display: flex; }
 
-    .icon-btn {
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      cursor: pointer;
-      padding: 2px 5px;
-      font-size: 11px;
-      border-radius: 3px;
-      transition: all 0.1s;
-    }
+    .icon-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 2px 5px; font-size: 11px; border-radius: 3px; transition: all 0.1s; }
     .icon-btn:hover { background: var(--surface3); color: var(--text); }
 
-    .subcategories { padding-left: 12px; }
+    .subcategories { padding-left: 14px; }
 
     .sub-item {
-      display: flex;
-      align-items: center;
-      padding: 5px 10px 5px 12px;
-      margin: 1px 6px;
-      border-radius: var(--r-sm);
-      cursor: pointer;
-      font-size: 12px;
-      color: var(--text-sub);
-      gap: 8px;
-      transition: background 0.1s;
+      display: flex; align-items: center;
+      padding: 5px 10px 5px 12px; margin: 1px 6px;
+      border-radius: var(--r-sm); cursor: pointer;
+      font-size: 12px; color: var(--text-sub); gap: 8px; transition: background 0.1s;
     }
-    .sub-item:hover,
-    .sub-item.active { background: var(--surface2); color: var(--text); }
-
-    .sub-dot {
-      width: 4px; height: 4px;
-      border-radius: 50%;
-      background: var(--text-muted);
-      flex-shrink: 0;
-    }
+    .sub-item:hover, .sub-item.active { background: var(--surface2); color: var(--text); }
+    .sub-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--text-muted); flex-shrink: 0; }
     .sub-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .sub-actions { display: none; }
     .sub-item:hover .sub-actions { display: flex; gap: 2px; }
 
     /* ── MAIN ── */
     #main {
-      margin-left: var(--sidebar-w);
-      margin-top: var(--habits-h);
+      margin-left: var(--sidebar-w); margin-top: var(--habits-h);
       min-height: calc(100vh - var(--habits-h));
-      padding: 40px 48px 80px;
-      max-width: 860px;
+      padding: 0 0 80px;
     }
 
     /* ── HOME ── */
-    .home-greeting {
-      font-size: 28px;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-      margin-bottom: 6px;
-    }
-    .home-sub {
-      font-size: 13px;
-      color: var(--text-sub);
-      margin-bottom: 32px;
-      line-height: 1.5;
-    }
+    .home-wrap { padding: 40px 48px; }
+    .home-greeting { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 6px; }
+    .home-sub { font-size: 13px; color: var(--text-sub); margin-bottom: 32px; line-height: 1.5; }
 
     .stats-row { display: flex; gap: 12px; margin-bottom: 36px; flex-wrap: wrap; }
 
     .stat-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--r);
-      padding: 18px 22px;
-      flex: 1;
-      min-width: 110px;
-      transition: border-color 0.15s;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 18px 22px; flex: 1; min-width: 110px;
     }
-    .stat-card:hover { border-color: var(--border2); }
-
-    .stat-num {
-      font-size: 28px;
-      font-weight: 700;
-      letter-spacing: -1px;
-      color: var(--accent);
-      line-height: 1;
-      margin-bottom: 4px;
-    }
+    .stat-num { font-size: 28px; font-weight: 700; letter-spacing: -1px; color: var(--accent); line-height: 1; margin-bottom: 4px; }
     .stat-label { font-size: 11px; color: var(--text-sub); }
 
-    /* Category grid on home */
-    .cat-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 10px;
-      margin-top: 8px;
-    }
+    .cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin-top: 8px; }
 
     .cat-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--r-lg);
-      padding: 18px 16px;
-      cursor: pointer;
-      transition: all 0.18s;
-      border-top: 3px solid transparent;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r-lg); padding: 18px 16px; cursor: pointer;
+      transition: all 0.18s; border-top: 3px solid transparent;
     }
     .cat-card:hover { background: var(--surface2); transform: translateY(-2px); }
-    .cat-card-emoji { font-size: 22px; margin-bottom: 10px; }
     .cat-card-name { font-size: 13px; font-weight: 600; }
-    .cat-card-sub { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+    .cat-card-sub { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
 
-    /* ── CONTENT ── */
-    .content-header { margin-bottom: 28px; }
-    .content-breadcrumb { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.08em; }
+    /* ── CONTENT PAGE ── */
+    .content-hero {
+      padding: 32px 48px 28px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* tinted bg overlay — set via JS with category color */
+    .content-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--cat-bg, transparent);
+      pointer-events: none;
+    }
+
+    .content-breadcrumb { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.08em; }
+
     .content-title-row { display: flex; align-items: center; gap: 12px; }
-    .content-emoji { font-size: 28px; line-height: 1; }
     .content-title { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
+
+    .content-body { padding: 32px 48px 0; }
 
     .section { margin-bottom: 36px; }
     .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
     .section-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-muted); }
 
     .section-add-btn {
-      background: none;
-      border: none;
-      color: var(--accent);
-      font-family: 'Inter', sans-serif;
-      font-size: 12px;
-      font-weight: 500;
-      cursor: pointer;
-      padding: 3px 8px;
-      border-radius: var(--r-sm);
-      transition: background 0.1s;
+      background: none; border: none; color: var(--accent);
+      font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500;
+      cursor: pointer; padding: 3px 8px; border-radius: var(--r-sm); transition: background 0.1s;
     }
     .section-add-btn:hover { background: var(--accent-dim); }
 
     /* ── TODOS ── */
     .todo-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 12px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--r);
-      margin-bottom: 5px;
-      cursor: pointer;
-      transition: border-color 0.15s, background 0.15s;
-      overflow: hidden;
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: var(--r);
+      margin-bottom: 5px; cursor: pointer;
+      transition: border-color 0.15s, background 0.15s; overflow: hidden;
     }
     .todo-item:hover { border-color: var(--border2); background: var(--surface2); }
-
-    .todo-box {
-      width: 17px; height: 17px;
-      border: 1.5px solid var(--border2);
-      border-radius: 4px;
-      flex-shrink: 0;
-      transition: all 0.2s;
-    }
+    .todo-box { width: 17px; height: 17px; border: 1.5px solid var(--border2); border-radius: 4px; flex-shrink: 0; transition: all 0.2s; }
 
     @keyframes todoOut {
       0%   { opacity: 1; max-height: 55px; padding-top: 10px; padding-bottom: 10px; margin-bottom: 5px; }
@@ -467,69 +274,33 @@
     .todo-item.completing .todo-box { background: var(--success); border-color: var(--success); }
 
     .todo-text { font-size: 13px; flex: 1; line-height: 1.4; }
-
-    .todo-del {
-      display: none;
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      cursor: pointer;
-      font-size: 12px;
-      padding: 2px 6px;
-      border-radius: 3px;
-      transition: all 0.1s;
-      flex-shrink: 0;
-    }
+    .todo-del { display: none; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 12px; padding: 2px 6px; border-radius: 3px; flex-shrink: 0; }
     .todo-item:hover .todo-del { display: block; }
     .todo-del:hover { background: rgba(239,68,68,0.12); color: var(--danger); }
 
     /* ── LINKS ── */
     .link-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 12px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--r);
-      margin-bottom: 5px;
-      text-decoration: none;
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: var(--r);
+      margin-bottom: 5px; text-decoration: none;
       transition: border-color 0.15s, background 0.15s;
     }
-    .link-row:hover { background: var(--surface2); }
-
-    .link-fav { width: 16px; height: 16px; border-radius: 3px; flex-shrink: 0; object-fit: contain; }
+    .link-row:hover { background: var(--surface2); border-color: var(--accent); }
+    .link-fav { width: 16px; height: 16px; border-radius: 3px; flex-shrink: 0; }
     .link-title { font-size: 13px; color: var(--text); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .link-domain { font-size: 11px; color: var(--text-muted); max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0; }
-
-    .link-del {
-      display: none;
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      cursor: pointer;
-      font-size: 12px;
-      padding: 2px 6px;
-      border-radius: 3px;
-      flex-shrink: 0;
-    }
+    .link-del { display: none; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 12px; padding: 2px 6px; border-radius: 3px; flex-shrink: 0; }
     .link-row:hover .link-del { display: block; }
     .link-del:hover { background: rgba(239,68,68,0.12); color: var(--danger); }
 
     /* ── NOTES ── */
     .notes-area {
-      width: 100%;
-      min-height: 140px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--r);
-      padding: 14px 16px;
-      color: var(--text);
-      font-family: 'Inter', sans-serif;
-      font-size: 13px;
-      line-height: 1.7;
-      resize: vertical;
-      transition: border-color 0.15s;
+      width: 100%; min-height: 140px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 14px 16px;
+      color: var(--text); font-family: 'Inter', sans-serif;
+      font-size: 13px; line-height: 1.7; resize: vertical; transition: border-color 0.15s;
     }
     .notes-area:focus { outline: none; border-color: var(--accent); }
     .notes-area::placeholder { color: var(--text-muted); }
@@ -538,154 +309,41 @@
 
     /* ── INPUTS ── */
     .input-field {
-      width: 100%;
-      background: var(--surface2);
-      border: 1px solid var(--border2);
-      border-radius: var(--r);
-      padding: 10px 13px;
-      color: var(--text);
-      font-family: 'Inter', sans-serif;
-      font-size: 13px;
-      transition: border-color 0.15s;
-      margin-bottom: 10px;
+      width: 100%; background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: var(--r); padding: 10px 13px; color: var(--text);
+      font-family: 'Inter', sans-serif; font-size: 13px;
+      transition: border-color 0.15s; margin-bottom: 10px;
     }
     .input-field:focus { outline: none; border-color: var(--accent); }
     .input-field::placeholder { color: var(--text-muted); }
 
     /* ── BUTTONS ── */
-    .btn-primary {
-      background: var(--accent);
-      border: none;
-      border-radius: var(--r);
-      color: #fff;
-      font-family: 'Inter', sans-serif;
-      font-size: 13px;
-      font-weight: 500;
-      padding: 9px 20px;
-      cursor: pointer;
-      transition: opacity 0.15s;
-    }
+    .btn-primary { background: var(--accent); border: none; border-radius: var(--r); color: #fff; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 9px 20px; cursor: pointer; transition: opacity 0.15s; }
     .btn-primary:hover { opacity: 0.85; }
-
-    .btn-ghost {
-      background: none;
-      border: 1px solid var(--border2);
-      border-radius: var(--r);
-      color: var(--text-sub);
-      font-family: 'Inter', sans-serif;
-      font-size: 13px;
-      padding: 9px 20px;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
+    .btn-ghost { background: none; border: 1px solid var(--border2); border-radius: var(--r); color: var(--text-sub); font-family: 'Inter', sans-serif; font-size: 13px; padding: 9px 20px; cursor: pointer; transition: all 0.15s; }
     .btn-ghost:hover { color: var(--text); border-color: var(--text-muted); }
 
     /* ── MODAL ── */
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.7);
-      z-index: 200;
-      align-items: center;
-      justify-content: center;
-    }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; align-items: center; justify-content: center; }
     .modal-overlay.open { display: flex; }
-
-    .modal {
-      background: var(--surface);
-      border: 1px solid var(--border2);
-      border-radius: 14px;
-      padding: 26px;
-      width: 400px;
-      max-width: 92vw;
-    }
+    .modal { background: var(--surface); border: 1px solid var(--border2); border-radius: 14px; padding: 26px; width: 400px; max-width: 92vw; }
     .modal h3 { font-size: 15px; font-weight: 600; margin-bottom: 18px; }
     .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 6px; }
 
-    /* Emoji picker */
-    .picker-label {
-      font-size: 10px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-    }
-
-    .emoji-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      margin-bottom: 16px;
-    }
-
-    .emoji-btn {
-      width: 40px; height: 40px;
-      border: 1.5px solid var(--border2);
-      border-radius: 8px;
-      background: var(--surface2);
-      font-size: 20px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.12s;
-    }
-    .emoji-btn:hover { border-color: var(--accent); transform: scale(1.1); }
-    .emoji-btn.selected { border-color: var(--accent); background: var(--accent-dim); }
-
-    .color-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-bottom: 16px;
-    }
-
-    .color-btn {
-      width: 26px; height: 26px;
-      border-radius: 50%;
-      border: 2px solid transparent;
-      cursor: pointer;
-      transition: all 0.12s;
-      flex-shrink: 0;
-    }
-    .color-btn:hover { transform: scale(1.15); }
-    .color-btn.selected { border-color: #fff; transform: scale(1.15); }
-
     /* ── TOAST ── */
-    #toast {
-      position: fixed;
-      bottom: 24px; right: 24px;
-      background: var(--surface2);
-      border: 1px solid var(--border2);
-      border-radius: var(--r);
-      padding: 9px 16px;
-      font-size: 12px;
-      color: var(--text-sub);
-      z-index: 300;
-      transform: translateY(60px);
-      opacity: 0;
-      transition: all 0.22s;
-      pointer-events: none;
-    }
+    #toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--r); padding: 9px 16px; font-size: 12px; color: var(--text-sub); z-index: 300; transform: translateY(60px); opacity: 0; transition: all 0.22s; pointer-events: none; }
     #toast.show { transform: translateY(0); opacity: 1; }
 
     /* ── MOBILE ── */
     @media (max-width: 720px) {
       #sidebar { transform: translateX(-260px); transition: transform 0.25s; }
       #sidebar.open { transform: translateX(0); }
-      #main { margin-left: 0; padding: 24px 20px 60px; }
+      #main { margin-left: 0; }
+      .home-wrap, .content-hero, .content-body { padding-left: 20px; padding-right: 20px; }
       .menu-btn { display: block !important; }
     }
 
-    .overlay-bg {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.5);
-      z-index: 49;
-    }
+    .overlay-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 49; }
     .overlay-bg.open { display: block; }
   </style>
 </head>
@@ -738,7 +396,7 @@
 
 <!-- MODAL -->
 <div class="modal-overlay" id="modal-overlay">
-  <div class="modal" id="modal-box">
+  <div class="modal">
     <h3 id="modal-title">Add</h3>
     <div id="modal-body"></div>
     <div class="modal-actions">
@@ -771,20 +429,8 @@ const fbApp = initializeApp(firebaseConfig);
 const auth  = getAuth(fbApp);
 const db    = getFirestore(fbApp);
 
-// ── CONSTANTS ──
-const EMOJIS = [
-  '💰','📈','📊','💵','🏦','💳','🪙','📉',
-  '🏋️','💪','🥊','🏃','🧘','⚽','🏀','🎾','🏊','🚴','🥋','🎯',
-  '📚','✏️','🎓','📝','🔬','🧪','📐','🖥️',
-  '🚀','⚡','💡','🔑','🌟','🎪','🏆','💎','🔥','🧠',
-  '🎮','🎵','🎨','🎬','🎤','🎧','📸','🕹️',
-  '🌍','✈️','🏖️','🗺️','🏕️','🚗','🛳️','🏔️',
-  '🏠','❤️','🍕','🍜','☕','🐾','🌱','🌸',
-  '💻','🔧','⚙️','📱','🛒','📦','🤝','📣',
-];
-
-// Gem-toned, vibrant, dark-mode-optimised palette
-const COLORS = [
+// ── PALETTE (gem tones, dark-mode vibrant) ──
+const PALETTE = [
   '#6d5dfc', // sapphire
   '#10b981', // emerald
   '#f59e0b', // amber
@@ -792,22 +438,16 @@ const COLORS = [
   '#06b6d4', // cyan
   '#a855f7', // amethyst
   '#f97316', // topaz
-  '#14b8a6', // teal
+  '#14b8a6', // teal jade
   '#e879f9', // fuchsia
   '#3b82f6', // cobalt
   '#84cc16', // lime
   '#f43f5e', // rose
 ];
 
-// Returns next unused color, cycling through palette
-function nextColor() {
-  const usedColors = categories.map(c => c.color);
-  // Try to find a color not yet used
-  for (const c of COLORS) {
-    if (!usedColors.includes(c)) return c;
-  }
-  // All used — cycle by index
-  return COLORS[categories.length % COLORS.length];
+// Auto-assign next color — guaranteed sequential, no bugs
+function pickColor() {
+  return PALETTE[categories.length % PALETTE.length];
 }
 
 // ── STATE ──
@@ -819,15 +459,22 @@ let habits      = [];
 let openCats    = new Set();
 let unsubs      = [];
 
-const col  = n     => collection(db, 'users', currentUser.uid, n);
-const dref = (n,id) => doc(db, 'users', currentUser.uid, n, id);
-const today = () => new Date().toISOString().split('T')[0];
-const esc   = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const col   = n      => collection(db, 'users', currentUser.uid, n);
+const dref  = (n,id) => doc(db, 'users', currentUser.uid, n, id);
+const today = ()     => new Date().toISOString().split('T')[0];
+const esc   = s      => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+function hexToRgba(hex, a) {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
 
 // ── AUTH ──
 document.getElementById('google-signin-btn').onclick = async () => {
   try { await signInWithPopup(auth, new GoogleAuthProvider()); }
-  catch(e) { showToast('Sign-in failed — try again'); }
+  catch { showToast('Sign-in failed — try again'); }
 };
 
 document.getElementById('signout-btn').onclick = async () => {
@@ -856,7 +503,8 @@ function initApp() {
   }));
   unsubs.push(onSnapshot(query(col('categories'), orderBy('createdAt')), snap => {
     categories = snap.docs.map(d => ({id:d.id,...d.data()}));
-    renderSidebar(); renderHome();
+    renderSidebar();
+    if (currentView.type === 'home') renderHome();
   }));
   unsubs.push(onSnapshot(query(col('subcats'), orderBy('createdAt')), snap => {
     subcats = snap.docs.map(d => ({id:d.id,...d.data()}));
@@ -871,14 +519,8 @@ function renderHabitsBar() {
   const t  = today();
   const pending = habits.filter(h => !(h.completedDates||[]).includes(t));
   el.innerHTML = '';
-  if (!habits.length) {
-    el.innerHTML = '<span style="font-size:11px;color:var(--text-muted)">No habits yet</span>';
-    return;
-  }
-  if (!pending.length) {
-    el.innerHTML = '<span class="all-done-msg">✓ All habits done today!</span>';
-    return;
-  }
+  if (!habits.length) { el.innerHTML = '<span style="font-size:11px;color:var(--text-muted)">No habits yet</span>'; return; }
+  if (!pending.length) { el.innerHTML = '<span class="all-done-msg">✓ All habits done today!</span>'; return; }
   pending.forEach(h => {
     const chip = document.createElement('div');
     chip.className = 'habit-chip';
@@ -896,30 +538,29 @@ document.getElementById('add-habit-btn').onclick = () => {
     { type:'input', id:'name', placeholder:'100 push-ups, Daily reading…' }
   ], 'Add Habit', async vals => {
     if (!vals.name) return;
-    await addDoc(col('habits'), { name: vals.name, completedDates: [], createdAt: serverTimestamp() });
+    await addDoc(col('habits'), { name:vals.name, completedDates:[], createdAt:serverTimestamp() });
     showToast('Habit added');
   });
 };
 
 // ── SIDEBAR ──
 function renderSidebar() {
-  const list = document.getElementById('categories-list');
-  list.innerHTML = '';
+  const list    = document.getElementById('categories-list');
   const homeBtn = document.getElementById('home-btn');
+  list.innerHTML = '';
   if (homeBtn) homeBtn.className = 'sidebar-home-btn' + (currentView.type==='home' ? ' active' : '');
 
   categories.forEach(cat => {
-    const subs   = subcats.filter(s => s.catId === cat.id);
-    const isOpen = openCats.has(cat.id);
-    const color  = cat.color || '#7c6af7';
-    const emoji  = cat.emoji || '';
+    const subs    = subcats.filter(s => s.catId === cat.id);
+    const isOpen  = openCats.has(cat.id);
+    const color   = cat.color || '#6d5dfc';
     const isActive = currentView.catId === cat.id && !currentView.subId;
 
     const wrap = document.createElement('div');
     wrap.innerHTML = `
       <div class="category-header${isActive?' active':''}" data-catid="${cat.id}" style="border-left-color:${color}">
         <span class="cat-arrow${isOpen?' open':''}">▶</span>
-        ${emoji ? `<span class="cat-emoji">${emoji}</span>` : ''}
+        <div class="cat-color-dot" style="background:${color}"></div>
         <span class="cat-name">${esc(cat.name)}</span>
         <div class="cat-actions">
           <button class="icon-btn" data-action="addsub" data-catid="${cat.id}">+</button>
@@ -942,8 +583,8 @@ function renderSidebar() {
       e.stopPropagation();
       const {action,catid,subid,name} = btn.dataset;
       if (action==='addsub') openAddSub(catid);
-      if (action==='delcat') { if(confirm(`Delete "${name}"?`)) { deleteDoc(dref('categories',catid)); if(currentView.catId===catid){currentView={type:'home'};renderHome();} showToast('Deleted'); } }
-      if (action==='delsub') { if(confirm(`Delete "${name}"?`)) { deleteDoc(dref('subcats',subid)); if(currentView.subId===subid){currentView={type:'home'};renderHome();} showToast('Deleted'); } }
+      if (action==='delcat') { if(confirm(`Delete "${name}" and all its content?`)) { deleteDoc(dref('categories',catid)); if(currentView.catId===catid){goHome();} showToast('Deleted'); } }
+      if (action==='delsub') { if(confirm(`Delete "${name}"?`)) { deleteDoc(dref('subcats',subid)); if(currentView.subId===subid){goHome();} showToast('Deleted'); } }
       return;
     }
     const subEl = e.target.closest('[data-subid]');
@@ -963,40 +604,17 @@ function renderSidebar() {
 
 // ── ADD CATEGORY ──
 document.getElementById('sidebar-add-cat-btn').onclick = () => {
-  let selEmoji = null; // optional — null means no emoji chosen
-
   openModal('New Category', [
-    { type:'input', id:'name', placeholder:'Money, Fitness, School…' },
-    { type:'custom', id:'emoji', render: () => {
-      const div = document.createElement('div');
-      div.innerHTML = `
-        <div class="picker-label" style="margin-bottom:8px">Icon <span style="color:var(--text-muted);font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></div>
-        <div style="max-height:160px;overflow-y:auto;border:1px solid var(--border2);border-radius:8px;padding:8px;margin-bottom:4px">
-          <div class="emoji-grid" id="emoji-grid">
-            <button class="emoji-btn selected" data-emoji="" title="No icon">✕</button>
-            ${EMOJIS.map(e=>`<button class="emoji-btn" data-emoji="${e}">${e}</button>`).join('')}
-          </div>
-        </div>
-      `;
-      div.querySelector('#emoji-grid').onclick = ev => {
-        const b = ev.target.closest('.emoji-btn');
-        if (!b) return;
-        div.querySelectorAll('.emoji-btn').forEach(x => x.classList.remove('selected'));
-        b.classList.add('selected');
-        selEmoji = b.dataset.emoji || null;
-      };
-      return div;
-    }}
+    { type:'input', id:'name', placeholder:'Money, Fitness, School…' }
   ], 'Create Category', async vals => {
     if (!vals.name) return;
-    const autoColor = nextColor();
-    const id = await addDoc(col('categories'), {
-      name: vals.name,
-      emoji: selEmoji || '',
-      color: autoColor,
+    // Pass current categories snapshot to pick an unused color
+    const color = pickColor();
+    await addDoc(col('categories'), {
+      name:  vals.name,
+      color: color,
       createdAt: serverTimestamp()
     });
-    openCats.add(id.id);
     showToast('Category added');
   });
 };
@@ -1014,7 +632,13 @@ function openAddSub(catId) {
 }
 
 // ── HOME ──
-window.goHome = () => { currentView={type:'home',catId:null,subId:null}; renderSidebar(); renderHome(); closeSidebar(); };
+window.goHome = () => {
+  currentView = { type:'home', catId:null, subId:null };
+  // Reset accent to default
+  document.documentElement.style.setProperty('--accent', '#6d5dfc');
+  document.documentElement.style.setProperty('--accent-dim', 'rgba(109,93,252,0.12)');
+  renderSidebar(); renderHome(); closeSidebar();
+};
 
 function renderHome() {
   if (currentView.type !== 'home') return;
@@ -1026,31 +650,34 @@ function renderHome() {
   const left = habits.filter(x => !(x.completedDates||[]).includes(t)).length;
 
   area.innerHTML = `
-    <div class="home-greeting">${greeting}, ${name} 👋</div>
-    <div class="home-sub">Select a category from the sidebar, or add a new one with the <strong>+</strong> button.</div>
-    <div class="stats-row">
-      <div class="stat-card"><div class="stat-num">${categories.length}</div><div class="stat-label">Categories</div></div>
-      <div class="stat-card"><div class="stat-num">${habits.length}</div><div class="stat-label">Daily Habits</div></div>
-      <div class="stat-card"><div class="stat-num">${left}</div><div class="stat-label">Habits left today</div></div>
+    <div class="home-wrap">
+      <div class="home-greeting">${greeting}, ${name} 👋</div>
+      <div class="home-sub">Select a category from the sidebar, or add a new one with the <strong>+</strong> button.</div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-num">${categories.length}</div><div class="stat-label">Categories</div></div>
+        <div class="stat-card"><div class="stat-num">${habits.length}</div><div class="stat-label">Daily Habits</div></div>
+        <div class="stat-card"><div class="stat-num">${left}</div><div class="stat-label">Habits left today</div></div>
+      </div>
+      ${categories.length ? `
+        <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:var(--text-muted);margin-bottom:12px">Your Categories</div>
+        <div class="cat-grid" id="cat-grid"></div>` : `
+        <div style="text-align:center;padding:48px 20px;color:var(--text-muted);font-size:13px">
+          <div style="font-size:36px;margin-bottom:12px">📂</div>
+          Click the <strong style="color:var(--text-sub)">+</strong> in the sidebar to add your first category.
+        </div>`}
     </div>
-    ${categories.length ? `
-      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:var(--text-muted);margin-bottom:12px">Your Categories</div>
-      <div class="cat-grid" id="cat-grid"></div>` : `
-      <div style="text-align:center;padding:48px 20px;color:var(--text-muted);font-size:13px">
-        <div style="font-size:36px;margin-bottom:12px">📂</div>
-        Click the <strong style="color:var(--text-sub)">+</strong> in the sidebar to add your first category.
-      </div>`}
   `;
 
   const grid = document.getElementById('cat-grid');
   if (grid) {
     categories.forEach(cat => {
-      const subs = subcats.filter(s => s.catId === cat.id);
-      const card = document.createElement('div');
+      const subs  = subcats.filter(s => s.catId === cat.id);
+      const color = cat.color || '#6d5dfc';
+      const card  = document.createElement('div');
       card.className = 'cat-card';
-      card.style.borderTopColor = cat.color || '#7c6af7';
+      card.style.borderTopColor = color;
       card.innerHTML = `
-        ${cat.emoji ? `<div class="cat-card-emoji">${cat.emoji}</div>` : ''}
+        <div style="width:10px;height:10px;border-radius:50%;background:${color};margin-bottom:12px"></div>
         <div class="cat-card-name">${esc(cat.name)}</div>
         <div class="cat-card-sub">${subs.length} subcategor${subs.length===1?'y':'ies'}</div>
       `;
@@ -1066,52 +693,57 @@ function renderHome() {
 
 // ── CONTENT VIEW ──
 function renderContentView() {
-  const area = document.getElementById('content-area');
-  const cat  = categories.find(c => c.id === currentView.catId);
-  const sub  = currentView.subId ? subcats.find(s => s.id === currentView.subId) : null;
+  const area  = document.getElementById('content-area');
+  const cat   = categories.find(c => c.id === currentView.catId);
+  const sub   = currentView.subId ? subcats.find(s => s.id === currentView.subId) : null;
   if (!cat) return;
 
-  const color  = cat.color || '#7c6af7';
-  const emoji  = cat.emoji || '📁';
-  const title  = sub ? sub.name : cat.name;
-  const crumb  = sub ? `${cat.name} / ${sub.name}` : cat.name;
-  const ctxId  = currentView.subId || currentView.catId;
+  const color = cat.color || '#6d5dfc';
+  const title = sub ? sub.name : cat.name;
+  const crumb = sub ? `${cat.name} / ${sub.name}` : cat.name;
+  const ctxId = currentView.subId || currentView.catId;
 
-  // Update accent color for this category
+  // Apply this category's color as the accent throughout the app
   document.documentElement.style.setProperty('--accent', color);
-  document.documentElement.style.setProperty('--accent-dim', hexToRgba(color, 0.13));
+  document.documentElement.style.setProperty('--accent-dim', hexToRgba(color, 0.12));
+
+  // Hero bg: very subtle tint of the category color
+  const heroBg  = hexToRgba(color, 0.07);
+  const heroBorder = hexToRgba(color, 0.2);
 
   area.innerHTML = `
-    <div class="content-header">
-      <div class="content-breadcrumb">${esc(crumb)}</div>
+    <div class="content-hero" style="--cat-bg:${heroBg}; border-bottom-color:${heroBorder};">
+      <div class="content-breadcrumb" style="color:${hexToRgba(color,0.7)}">${esc(crumb)}</div>
       <div class="content-title-row">
-        ${!sub && emoji ? `<span class="content-emoji">${emoji}</span>` : ''}
+        <div style="width:14px;height:14px;border-radius:50%;background:${color};flex-shrink:0"></div>
         <span class="content-title">${esc(title)}</span>
       </div>
     </div>
 
-    <div class="section">
-      <div class="section-header">
-        <span class="section-label">To-Do</span>
-        <button class="section-add-btn" id="add-todo-btn">+ Add task</button>
+    <div class="content-body">
+      <div class="section">
+        <div class="section-header">
+          <span class="section-label">To-Do</span>
+          <button class="section-add-btn" id="add-todo-btn">+ Add task</button>
+        </div>
+        <div id="todos-${ctxId}"><div class="empty-line">Loading…</div></div>
       </div>
-      <div id="todos-${ctxId}"><div class="empty-line">Loading…</div></div>
-    </div>
 
-    <div class="section">
-      <div class="section-header">
-        <span class="section-label">Resources & Links</span>
-        <button class="section-add-btn" id="add-link-btn">+ Add link</button>
+      <div class="section">
+        <div class="section-header">
+          <span class="section-label">Resources & Links</span>
+          <button class="section-add-btn" id="add-link-btn">+ Add link</button>
+        </div>
+        <div id="links-${ctxId}"><div class="empty-line">Loading…</div></div>
       </div>
-      <div id="links-${ctxId}"><div class="empty-line">Loading…</div></div>
-    </div>
 
-    <div class="section">
-      <div class="section-header">
-        <span class="section-label">Notes</span>
-        <span style="font-size:10px;color:var(--text-muted)">Saves automatically</span>
+      <div class="section">
+        <div class="section-header">
+          <span class="section-label">Notes</span>
+          <span style="font-size:10px;color:var(--text-muted)">Saves automatically</span>
+        </div>
+        <textarea class="notes-area" id="notes-${ctxId}" placeholder="Paste in Google Doc content, write notes, drop in anything…"></textarea>
       </div>
-      <textarea class="notes-area" id="notes-${ctxId}" placeholder="Paste in Google Doc content, write notes, drop in anything…"></textarea>
     </div>
   `;
 
@@ -1122,28 +754,19 @@ function renderContentView() {
   loadNotes(ctxId);
 }
 
-function hexToRgba(hex, a) {
-  const r = parseInt(hex.slice(1,3),16);
-  const g = parseInt(hex.slice(3,5),16);
-  const b = parseInt(hex.slice(5,7),16);
-  return `rgba(${r},${g},${b},${a})`;
-}
-
 // ── TODOS ──
 function loadTodos(ctxId) {
   const q = query(col('todos'), where('ctxId','==',ctxId), orderBy('createdAt'));
   const unsub = onSnapshot(q, snap => {
-    const all     = snap.docs.map(d => ({id:d.id,...d.data()}));
-    const pending = all.filter(t => !t.done);
-    const el      = document.getElementById(`todos-${ctxId}`);
+    const pending = snap.docs.map(d => ({id:d.id,...d.data()})).filter(t => !t.done);
+    const el = document.getElementById(`todos-${ctxId}`);
     if (!el) return unsub();
     if (!pending.length) { el.innerHTML = '<div class="empty-line">No tasks yet — add your first one above.</div>'; return; }
     el.innerHTML = '';
     pending.forEach(t => {
       const item = document.createElement('div');
       item.className = 'todo-item';
-      item.id = `todo-${t.id}`;
-      item.innerHTML = `<div class="todo-box"></div><span class="todo-text">${esc(t.text)}</span><button class="todo-del" data-id="${t.id}">✕</button>`;
+      item.innerHTML = `<div class="todo-box"></div><span class="todo-text">${esc(t.text)}</span><button class="todo-del"data-id="${t.id}">✕</button>`;
       item.querySelector('.todo-box').onclick = () => { item.classList.add('completing'); updateDoc(dref('todos',t.id),{done:true}); setTimeout(()=>item.remove(),350); };
       item.querySelector('.todo-del').onclick = e => { e.stopPropagation(); deleteDoc(dref('todos',t.id)); showToast('Task removed'); };
       el.appendChild(item);
@@ -1185,7 +808,7 @@ function loadLinks(ctxId) {
 
 function addLinkItem(ctxId) {
   openModal('Add Link', [
-    { type:'input', id:'title', placeholder:'Link title (e.g. Day Trading Tutorial)' },
+    { type:'input', id:'title', placeholder:'Link title  (e.g. Day Trading Tutorial)' },
     { type:'input', id:'url',   placeholder:'URL  (https://youtube.com/…)' }
   ], 'Save Link', async vals => {
     if (!vals.url) return;
@@ -1213,7 +836,7 @@ async function loadNotes(ctxId) {
   }
 }
 
-// ── MODAL (universal) ──
+// ── MODAL ──
 function openModal(title, fields, confirmLabel, cb) {
   document.getElementById('modal-title').textContent = title;
   document.getElementById('modal-confirm').textContent = confirmLabel || 'Add';
@@ -1229,33 +852,27 @@ function openModal(title, fields, confirmLabel, cb) {
       inp.placeholder = f.placeholder || '';
       inp.autocomplete = 'off';
       inp.oninput = () => { vals[f.id] = inp.value.trim(); };
-      inp.onkeydown = e => { if (e.key==='Enter') { vals[f.id]=inp.value.trim(); handleConfirm(); } };
+      inp.onkeydown = e => { if (e.key==='Enter') { vals[f.id]=inp.value.trim(); doConfirm(); } };
       body.appendChild(inp);
-      // Focus first input after render
-      setTimeout(() => { if (!body.querySelector('input:focus')) inp.focus(); }, 60);
-    } else if (f.type === 'custom') {
-      const el = f.render();
-      body.appendChild(el);
+      setTimeout(() => inp.focus(), 60);
     }
   });
 
-  const handleConfirm = () => {
-    // collect any remaining input values
-    body.querySelectorAll('input.input-field').forEach((inp, i) => {
-      const field = fields.filter(f => f.type==='input')[i];
+  function doConfirm() {
+    body.querySelectorAll('input.input-field').forEach((inp,i) => {
+      const field = fields.filter(f=>f.type==='input')[i];
       if (field) vals[field.id] = inp.value.trim();
     });
     cb(vals);
     closeModal();
-  };
+  }
 
-  document.getElementById('modal-confirm').onclick = handleConfirm;
+  document.getElementById('modal-confirm').onclick = doConfirm;
   document.getElementById('modal-overlay').classList.add('open');
 }
 
 document.getElementById('modal-cancel').onclick = closeModal;
 document.getElementById('modal-overlay').onclick = e => { if (e.target===e.currentTarget) closeModal(); };
-
 function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
 
 // ── SIDEBAR MOBILE ──
