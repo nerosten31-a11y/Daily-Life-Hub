@@ -105,12 +105,12 @@
     .all-done-msg { font-size: 12px; color: var(--success); font-weight: 500; white-space: nowrap; }
 
     .add-habit-btn {
-      background: none; border: 1px dashed var(--border2); border-radius: 20px;
-      color: var(--text-muted); padding: 4px 12px;
-      font-family: 'Inter', sans-serif; font-size: 12px; cursor: pointer;
+      background: var(--accent-dim); border: 1.5px solid var(--accent); border-radius: 20px;
+      color: var(--accent); padding: 5px 14px;
+      font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer;
       white-space: nowrap; flex-shrink: 0; transition: all 0.15s;
     }
-    .add-habit-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .add-habit-btn:hover { background: var(--accent); color: #fff; }
 
     .signout-btn {
       background: none; border: 1px solid var(--border); color: var(--text-muted);
@@ -208,7 +208,7 @@
     .stat-num { font-size: 28px; font-weight: 700; letter-spacing: -1px; color: var(--accent); line-height: 1; margin-bottom: 4px; }
     .stat-label { font-size: 11px; color: var(--text-sub); }
 
-    .cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin-top: 8px; }
+    .cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin-top: 8px; align-items: start; }
 
     .cat-card {
       background: var(--surface); border: 1px solid var(--border);
@@ -218,6 +218,11 @@
     .cat-card:hover { background: var(--surface2); transform: translateY(-2px); }
     .cat-card-name { font-size: 13px; font-weight: 600; }
     .cat-card-sub { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+    .cat-card-dropdown { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 2px; }
+    .cat-card-dropdown-item { font-size: 12px; color: var(--text-sub); padding: 6px 8px; border-radius: var(--r-sm); transition: background 0.12s, color 0.12s; }
+    .cat-card-dropdown-item:hover { background: var(--surface3); color: var(--text); }
+    .cat-card-dropdown-empty { font-size: 11px; color: var(--text-muted); padding: 4px 8px; }
 
     /* ── CONTENT PAGE ── */
     .content-hero {
@@ -334,6 +339,55 @@
     #toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--r); padding: 9px 16px; font-size: 12px; color: var(--text-sub); z-index: 300; transform: translateY(60px); opacity: 0; transition: all 0.22s; pointer-events: none; }
     #toast.show { transform: translateY(0); opacity: 1; }
 
+    /* ── CALENDAR ── */
+    .cal-header { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
+    .cal-nav-btn {
+      background: var(--surface); border: 1px solid var(--border2); color: var(--text);
+      width: 30px; height: 30px; border-radius: var(--r-sm); cursor: pointer;
+      font-size: 15px; display: flex; align-items: center; justify-content: center; transition: all 0.15s;
+    }
+    .cal-nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .cal-month-title { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; min-width: 170px; }
+    .cal-today-btn {
+      background: var(--accent-dim); border: 1px solid var(--accent); color: var(--accent);
+      font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600;
+      padding: 6px 14px; border-radius: var(--r-sm); cursor: pointer; margin-left: auto; transition: all 0.15s;
+    }
+    .cal-today-btn:hover { background: var(--accent); color: #fff; }
+
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+    .cal-dow { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); text-align: center; padding-bottom: 6px; }
+    .cal-day {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--r);
+      min-height: 78px; padding: 8px; cursor: pointer; transition: all 0.15s;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .cal-day:hover { border-color: var(--accent); background: var(--surface2); }
+    .cal-day.empty { background: transparent; border-color: transparent; cursor: default; }
+    .cal-day.empty:hover { background: transparent; border-color: transparent; }
+    .cal-day.today { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+    .cal-day.selected { background: var(--accent-dim); border-color: var(--accent); }
+    .cal-day-num { font-size: 13px; font-weight: 600; }
+    .cal-day.today .cal-day-num { color: var(--accent); }
+    .cal-day-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-top: auto; }
+    .cal-day-count { font-size: 10px; color: var(--text-muted); margin-top: auto; }
+
+    .cal-panel {
+      margin-top: 24px; background: var(--surface); border: 1px solid var(--border2);
+      border-radius: var(--r-lg); padding: 20px 22px;
+    }
+    .cal-panel-title { font-size: 15px; font-weight: 700; margin-bottom: 14px; }
+    .cal-entry {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 11px; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--r); margin-bottom: 6px; font-size: 13px;
+    }
+    .cal-entry span { flex: 1; }
+    .cal-entry button { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 12px; padding: 2px 6px; border-radius: 3px; }
+    .cal-entry button:hover { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .cal-add-row { display: flex; gap: 8px; margin-top: 10px; }
+    .cal-add-row .input-field { margin-bottom: 0; }
+
     /* ── MOBILE ── */
     @media (max-width: 720px) {
       #sidebar { transform: translateX(-260px); transition: transform 0.25s; }
@@ -341,6 +395,7 @@
       #main { margin-left: 0; }
       .home-wrap, .content-hero, .content-body { padding-left: 20px; padding-right: 20px; }
       .menu-btn { display: block !important; }
+      .cal-day { min-height: 54px; padding: 5px; }
     }
 
     .overlay-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 49; }
@@ -379,6 +434,7 @@
 
   <div id="sidebar">
     <div class="sidebar-home-btn" id="home-btn" onclick="goHome()">🏠 Home</div>
+    <div class="sidebar-home-btn" id="calendar-btn" onclick="goCalendar()">📅 Calendar</div>
     <div class="sidebar-divider"></div>
     <div class="sidebar-section-label">
       Categories
@@ -457,7 +513,13 @@ let categories  = [];
 let subcats     = [];
 let habits      = [];
 let openCats    = new Set();
+let homeOpenCats = new Set();
 let unsubs      = [];
+
+// calendar state
+let calendarViewDate = new Date();
+let calendarEvents   = [];
+let selectedCalDate  = null;
 
 const col   = n      => collection(db, 'users', currentUser.uid, n);
 const dref  = (n,id) => doc(db, 'users', currentUser.uid, n, id);
@@ -510,6 +572,10 @@ function initApp() {
     subcats = snap.docs.map(d => ({id:d.id,...d.data()}));
     renderSidebar();
   }));
+  unsubs.push(onSnapshot(query(col('calendarEvents'), orderBy('date')), snap => {
+    calendarEvents = snap.docs.map(d => ({id:d.id,...d.data()}));
+    if (currentView.type === 'calendar') renderCalendar();
+  }));
   renderHome();
 }
 
@@ -547,8 +613,10 @@ document.getElementById('add-habit-btn').onclick = () => {
 function renderSidebar() {
   const list    = document.getElementById('categories-list');
   const homeBtn = document.getElementById('home-btn');
+  const calBtn  = document.getElementById('calendar-btn');
   list.innerHTML = '';
   if (homeBtn) homeBtn.className = 'sidebar-home-btn' + (currentView.type==='home' ? ' active' : '');
+  if (calBtn)  calBtn.className  = 'sidebar-home-btn' + (currentView.type==='calendar' ? ' active' : '');
 
   categories.forEach(cat => {
     const subs    = subcats.filter(s => s.catId === cat.id);
@@ -643,16 +711,12 @@ window.goHome = () => {
 function renderHome() {
   if (currentView.type !== 'home') return;
   const area = document.getElementById('content-area');
-  const name = currentUser?.displayName?.split(' ')[0] || 'there';
-  const h = new Date().getHours();
-  const greeting = h<12?'Good morning':h<17?'Good afternoon':'Good evening';
   const t = today();
   const left = habits.filter(x => !(x.completedDates||[]).includes(t)).length;
 
   area.innerHTML = `
     <div class="home-wrap">
-      <div class="home-greeting">${greeting}, ${name} 👋</div>
-      <div class="home-sub">Select a category from the sidebar, or add a new one with the <strong>+</strong> button.</div>
+      <div class="home-greeting">Regret</div>
       <div class="stats-row">
         <div class="stat-card"><div class="stat-num">${categories.length}</div><div class="stat-label">Categories</div></div>
         <div class="stat-card"><div class="stat-num">${habits.length}</div><div class="stat-label">Daily Habits</div></div>
@@ -673,6 +737,7 @@ function renderHome() {
     categories.forEach(cat => {
       const subs  = subcats.filter(s => s.catId === cat.id);
       const color = cat.color || '#6d5dfc';
+      const isOpen = homeOpenCats.has(cat.id);
       const card  = document.createElement('div');
       card.className = 'cat-card';
       card.style.borderTopColor = color;
@@ -680,15 +745,137 @@ function renderHome() {
         <div style="width:10px;height:10px;border-radius:50%;background:${color};margin-bottom:12px"></div>
         <div class="cat-card-name">${esc(cat.name)}</div>
         <div class="cat-card-sub">${subs.length} subcategor${subs.length===1?'y':'ies'}</div>
+        ${isOpen ? `
+          <div class="cat-card-dropdown">
+            <div class="cat-card-dropdown-item" data-gohome-cat="${cat.id}" style="color:${color};font-weight:600">→ Open ${esc(cat.name)} page</div>
+            ${subs.length ? subs.map(s=>`<div class="cat-card-dropdown-item" data-gohome-sub="${s.id}" data-gohome-catid="${cat.id}">• ${esc(s.name)}</div>`).join('') : `<div class="cat-card-dropdown-empty">No subcategories yet</div>`}
+          </div>
+        ` : ''}
       `;
-      card.onclick = () => {
-        openCats.add(cat.id);
-        currentView = { type:'cat', catId:cat.id, subId:null };
-        renderSidebar(); renderContentView();
+      card.onclick = (e) => {
+        const openLink = e.target.closest('[data-gohome-cat]');
+        if (openLink) {
+          e.stopPropagation();
+          openCats.add(cat.id);
+          currentView = { type:'cat', catId:cat.id, subId:null };
+          renderSidebar(); renderContentView();
+          return;
+        }
+        const subLink = e.target.closest('[data-gohome-sub]');
+        if (subLink) {
+          e.stopPropagation();
+          const subid = subLink.dataset.gohomeSub;
+          const catid = subLink.dataset.gohomeCatid;
+          openCats.add(catid);
+          currentView = { type:'sub', catId:catid, subId:subid };
+          renderSidebar(); renderContentView();
+          return;
+        }
+        homeOpenCats.has(cat.id) ? homeOpenCats.delete(cat.id) : homeOpenCats.add(cat.id);
+        renderHome();
       };
       grid.appendChild(card);
     });
   }
+}
+
+// ── CALENDAR ──
+window.goCalendar = () => {
+  currentView = { type:'calendar', catId:null, subId:null };
+  document.documentElement.style.setProperty('--accent', '#6d5dfc');
+  document.documentElement.style.setProperty('--accent-dim', 'rgba(109,93,252,0.12)');
+  selectedCalDate = today();
+  calendarViewDate = new Date();
+  renderSidebar(); renderCalendar(); closeSidebar();
+};
+
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DOW_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+function dateKey(y,m,d) {
+  return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+}
+
+function renderCalendar() {
+  if (currentView.type !== 'calendar') return;
+  const area = document.getElementById('content-area');
+  const y = calendarViewDate.getFullYear();
+  const m = calendarViewDate.getMonth();
+  const firstDow = new Date(y, m, 1).getDay();
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const t = today();
+
+  area.innerHTML = `
+    <div class="home-wrap">
+      <div class="cal-header">
+        <button class="cal-nav-btn" id="cal-prev">‹</button>
+        <div class="cal-month-title">${MONTH_NAMES[m]} ${y}</div>
+        <button class="cal-nav-btn" id="cal-next">›</button>
+        <button class="cal-today-btn" id="cal-today-btn">Today — ${MONTH_NAMES[new Date().getMonth()]} ${new Date().getDate()}</button>
+      </div>
+      <div class="cal-grid" id="cal-grid">
+        ${DOW_NAMES.map(d=>`<div class="cal-dow">${d}</div>`).join('')}
+      </div>
+      <div id="cal-panel-wrap"></div>
+    </div>
+  `;
+
+  const grid = document.getElementById('cal-grid');
+  for (let i=0; i<firstDow; i++) grid.insertAdjacentHTML('beforeend', `<div class="cal-day empty"></div>`);
+  for (let d=1; d<=daysInMonth; d++) {
+    const key = dateKey(y,m,d);
+    const isToday = key === t;
+    const isSelected = key === selectedCalDate;
+    const count = calendarEvents.filter(ev => ev.date === key).length;
+    const cell = document.createElement('div');
+    cell.className = 'cal-day' + (isToday?' today':'') + (isSelected?' selected':'');
+    cell.innerHTML = `<div class="cal-day-num">${d}</div>${count ? `<div class="cal-day-count">${count} item${count>1?'s':''}</div><div class="cal-day-dot"></div>` : ''}`;
+    cell.onclick = () => { selectedCalDate = key; renderCalendar(); };
+    grid.appendChild(cell);
+  }
+
+  document.getElementById('cal-prev').onclick = () => { calendarViewDate = new Date(y, m-1, 1); renderCalendar(); };
+  document.getElementById('cal-next').onclick = () => { calendarViewDate = new Date(y, m+1, 1); renderCalendar(); };
+  document.getElementById('cal-today-btn').onclick = () => { calendarViewDate = new Date(); selectedCalDate = t; renderCalendar(); };
+
+  renderCalPanel();
+}
+
+function renderCalPanel() {
+  const wrap = document.getElementById('cal-panel-wrap');
+  if (!wrap || !selectedCalDate) return;
+  const entries = calendarEvents.filter(ev => ev.date === selectedCalDate);
+  const [yy,mm,dd] = selectedCalDate.split('-').map(Number);
+  const niceDate = new Date(yy, mm-1, dd).toLocaleDateString('en-AU', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+
+  wrap.innerHTML = `
+    <div class="cal-panel">
+      <div class="cal-panel-title">${niceDate}</div>
+      <div id="cal-entries">
+        ${entries.length ? entries.map(ev => `<div class="cal-entry"><span>${esc(ev.text)}</span><button data-id="${ev.id}">✕</button></div>`).join('') : `<div class="empty-line">Nothing added for this day yet.</div>`}
+      </div>
+      <div class="cal-add-row">
+        <input class="input-field" id="cal-new-entry" placeholder="Add something for this day…"/>
+        <button class="btn-primary" id="cal-add-entry-btn">Add</button>
+      </div>
+    </div>
+  `;
+
+  wrap.querySelectorAll('#cal-entries button').forEach(btn => {
+    btn.onclick = () => { deleteDoc(dref('calendarEvents', btn.dataset.id)); showToast('Removed'); };
+  });
+
+  const input = document.getElementById('cal-new-entry');
+  const addBtn = document.getElementById('cal-add-entry-btn');
+  const submit = async () => {
+    const val = input.value.trim();
+    if (!val) return;
+    await addDoc(col('calendarEvents'), { date: selectedCalDate, text: val, createdAt: serverTimestamp() });
+    input.value = '';
+    showToast('Added to calendar');
+  };
+  addBtn.onclick = submit;
+  input.onkeydown = e => { if (e.key==='Enter') submit(); };
 }
 
 // ── CONTENT VIEW ──
