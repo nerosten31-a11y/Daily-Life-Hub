@@ -1071,42 +1071,10 @@ function renderContentView() {
 
       <div class="section">
         <div class="section-header">
-          <span class="section-label">Checklist</span>
-          <button class="section-add-btn" id="add-check-btn">+ Add item</button>
-        </div>
-        <div id="checklist-${ctxId}"><div class="empty-line">Loading…</div></div>
-      </div>
-
-      <div class="section">
-        <div class="section-header">
-          <span class="section-label">Goals & Progress</span>
-          <button class="section-add-btn" id="add-goal-btn">+ Add goal</button>
-        </div>
-        <div id="goals-${ctxId}"><div class="empty-line">Loading…</div></div>
-      </div>
-
-      <div class="section">
-        <div class="section-header">
           <span class="section-label">Resources & Links</span>
           <button class="section-add-btn" id="add-link-btn">+ Add link</button>
         </div>
         <div id="links-${ctxId}"><div class="empty-line">Loading…</div></div>
-      </div>
-
-      <div class="section">
-        <div class="section-header">
-          <span class="section-label">Quick Ideas</span>
-          <button class="section-add-btn" id="add-idea-btn">+ Add idea</button>
-        </div>
-        <div id="ideas-${ctxId}"><div class="empty-line">Loading…</div></div>
-      </div>
-
-      <div class="section">
-        <div class="section-header">
-          <span class="section-label">Key Numbers</span>
-          <button class="section-add-btn" id="add-stat-btn">+ Add number</button>
-        </div>
-        <div id="stats-${ctxId}"><div class="empty-line">Loading…</div></div>
       </div>
 
       <div class="section">
@@ -1120,17 +1088,9 @@ function renderContentView() {
   `;
 
   document.getElementById('add-todo-btn').onclick = () => addTodo(ctxId);
-  document.getElementById('add-check-btn').onclick = () => addChecklistItem(ctxId);
-  document.getElementById('add-goal-btn').onclick = () => addGoal(ctxId);
   document.getElementById('add-link-btn').onclick = () => addLinkItem(ctxId);
-  document.getElementById('add-idea-btn').onclick = () => addIdea(ctxId);
-  document.getElementById('add-stat-btn').onclick = () => addStat(ctxId);
   loadTodos(ctxId);
-  loadChecklist(ctxId);
-  loadGoals(ctxId);
   loadLinks(ctxId);
-  loadIdeas(ctxId);
-  loadStats(ctxId);
   loadNotes(ctxId);
 }
 
