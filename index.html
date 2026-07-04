@@ -388,6 +388,68 @@
     .cal-add-row { display: flex; gap: 8px; margin-top: 10px; }
     .cal-add-row .input-field { margin-bottom: 0; }
 
+    /* ── TODO EXTRAS (priority/due date) ── */
+    .todo-meta { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+    .todo-badge { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 10px; white-space: nowrap; }
+    .badge-high { background: rgba(239,68,68,0.15); color: #f87171; }
+    .badge-med  { background: rgba(245,158,11,0.15); color: #fbbf24; }
+    .badge-low  { background: rgba(107,114,128,0.15); color: #9ca3af; }
+    .todo-due { font-size: 10px; color: var(--text-muted); }
+    .todo-due.overdue { color: var(--danger); font-weight: 600; }
+
+    /* ── SECTION VARIANTS (checklist/goals/ideas/stats) ── */
+    .check-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: var(--r);
+      margin-bottom: 5px; cursor: pointer; transition: all 0.15s;
+    }
+    .check-item:hover { border-color: var(--border2); background: var(--surface2); }
+    .check-item.done { opacity: 0.5; }
+    .check-item.done .check-text { text-decoration: line-through; }
+    .check-box { width: 17px; height: 17px; border: 1.5px solid var(--border2); border-radius: 4px; flex-shrink: 0; transition: all 0.15s; }
+    .check-item.done .check-box { background: var(--success); border-color: var(--success); }
+    .check-text { font-size: 13px; flex: 1; }
+
+    .goal-item { padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 8px; }
+    .goal-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .goal-title { font-size: 13px; font-weight: 600; }
+    .goal-pct { font-size: 12px; font-weight: 700; color: var(--accent); }
+    .goal-bar-track { width: 100%; height: 7px; background: var(--surface3); border-radius: 10px; overflow: hidden; margin-bottom: 8px; }
+    .goal-bar-fill { height: 100%; background: var(--accent); border-radius: 10px; transition: width 0.2s; }
+    .goal-slider { width: 100%; accent-color: var(--accent); }
+    .goal-del { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 11px; }
+    .goal-del:hover { color: var(--danger); }
+
+    .idea-chip {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+      padding: 7px 8px 7px 14px; margin: 0 6px 6px 0; font-size: 12px;
+    }
+    .idea-chip button { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 11px; padding: 2px 6px; border-radius: 50%; }
+    .idea-chip button:hover { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .idea-wrap { display: flex; flex-wrap: wrap; }
+
+    .stat-row-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r);
+      margin-bottom: 5px; font-size: 13px;
+    }
+    .stat-row-label { color: var(--text-sub); flex: 1; }
+    .stat-row-value { font-weight: 700; color: var(--accent); }
+    .stat-row-del { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 12px; padding: 2px 6px; border-radius: 3px; }
+    .stat-row-del:hover { background: rgba(239,68,68,0.12); color: var(--danger); }
+
+    /* ── GLOBAL TO-DO LIST PAGE ── */
+    .tl-header { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+    .tl-sub { font-size: 13px; color: var(--text-sub); margin-bottom: 24px; }
+    .tl-quickadd { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .tl-quickadd input.input-field { margin-bottom: 0; flex: 1; min-width: 180px; }
+    .tl-quickadd select.input-field, .tl-quickadd input[type=date].input-field { margin-bottom: 0; width: auto; flex: 0 0 auto; }
+    .tl-tabs { display: flex; gap: 6px; margin-bottom: 16px; }
+    .tl-tab { background: var(--surface); border: 1px solid var(--border2); color: var(--text-sub); font-family:'Inter',sans-serif; font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 20px; cursor: pointer; transition: all 0.15s; }
+    .tl-tab.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+
     /* ── MOBILE ── */
     @media (max-width: 720px) {
       #sidebar { transform: translateX(-260px); transition: transform 0.25s; }
@@ -435,6 +497,7 @@
   <div id="sidebar">
     <div class="sidebar-home-btn" id="home-btn" onclick="goHome()">🏠 Home</div>
     <div class="sidebar-home-btn" id="calendar-btn" onclick="goCalendar()">📅 Calendar</div>
+    <div class="sidebar-home-btn" id="todolist-btn" onclick="goTodoList()">✅ To-Do List</div>
     <div class="sidebar-divider"></div>
     <div class="sidebar-section-label">
       Categories
@@ -515,6 +578,7 @@ let habits      = [];
 let openCats    = new Set();
 let homeOpenCats = new Set();
 let unsubs      = [];
+let tlFilter    = 'active'; // for global to-do list page: 'active' | 'done' | 'all'
 
 // calendar state
 let calendarViewDate = new Date();
@@ -614,9 +678,11 @@ function renderSidebar() {
   const list    = document.getElementById('categories-list');
   const homeBtn = document.getElementById('home-btn');
   const calBtn  = document.getElementById('calendar-btn');
+  const tlBtn   = document.getElementById('todolist-btn');
   list.innerHTML = '';
   if (homeBtn) homeBtn.className = 'sidebar-home-btn' + (currentView.type==='home' ? ' active' : '');
   if (calBtn)  calBtn.className  = 'sidebar-home-btn' + (currentView.type==='calendar' ? ' active' : '');
+  if (tlBtn)   tlBtn.className   = 'sidebar-home-btn' + (currentView.type==='todolist' ? ' active' : '');
 
   categories.forEach(cat => {
     const subs    = subcats.filter(s => s.catId === cat.id);
@@ -878,7 +944,94 @@ function renderCalPanel() {
   input.onkeydown = e => { if (e.key==='Enter') submit(); };
 }
 
-// ── CONTENT VIEW ──
+// ── GLOBAL TO-DO LIST PAGE ──
+window.goTodoList = () => {
+  currentView = { type:'todolist', catId:null, subId:null };
+  document.documentElement.style.setProperty('--accent', '#6d5dfc');
+  document.documentElement.style.setProperty('--accent-dim', 'rgba(109,93,252,0.12)');
+  renderSidebar(); renderTodoListPage(); closeSidebar();
+};
+
+function renderTodoListPage() {
+  if (currentView.type !== 'todolist') return;
+  const area = document.getElementById('content-area');
+  const t = new Date().toLocaleDateString('en-AU', { weekday:'long', day:'numeric', month:'long' });
+
+  area.innerHTML = `
+    <div class="home-wrap">
+      <div class="tl-header">To-Do List</div>
+      <div class="tl-sub">${t} — everything you need to get done, in one place.</div>
+
+      <div class="tl-quickadd">
+        <input class="input-field" id="tl-quick-text" placeholder="Add a task and press Enter…"/>
+        <input class="input-field" type="date" id="tl-quick-due"/>
+        <select class="input-field" id="tl-quick-priority">
+          <option value="high">High</option>
+          <option value="med" selected>Medium</option>
+          <option value="low">Low</option>
+        </select>
+        <button class="btn-primary" id="tl-quick-add-btn">Add</button>
+      </div>
+
+      <div class="tl-tabs">
+        <button class="tl-tab${tlFilter==='active'?' active':''}" data-filter="active">Active</button>
+        <button class="tl-tab${tlFilter==='done'?' active':''}" data-filter="done">Completed</button>
+        <button class="tl-tab${tlFilter==='all'?' active':''}" data-filter="all">All</button>
+      </div>
+
+      <div id="tl-list"><div class="empty-line">Loading…</div></div>
+    </div>
+  `;
+
+  document.querySelectorAll('.tl-tab').forEach(btn => {
+    btn.onclick = () => { tlFilter = btn.dataset.filter; renderTodoListPage(); };
+  });
+
+  const submit = async () => {
+    const textEl = document.getElementById('tl-quick-text');
+    const dueEl  = document.getElementById('tl-quick-due');
+    const prEl   = document.getElementById('tl-quick-priority');
+    const text = textEl.value.trim();
+    if (!text) return;
+    await addDoc(col('todos'), { text, ctxId:'__global__', due:dueEl.value||null, priority:prEl.value, done:false, createdAt:serverTimestamp() });
+    textEl.value = ''; dueEl.value = '';
+    showToast('Task added');
+  };
+  document.getElementById('tl-quick-add-btn').onclick = submit;
+  document.getElementById('tl-quick-text').onkeydown = e => { if (e.key==='Enter') submit(); };
+
+  loadGlobalTodoList();
+}
+
+function loadGlobalTodoList() {
+  const q = query(col('todos'), where('ctxId','==','__global__'));
+  const unsub = onSnapshot(q, snap => {
+    const el = document.getElementById('tl-list');
+    if (!el) return unsub();
+    let items = snap.docs.map(d => ({id:d.id,...d.data()}));
+    if (tlFilter === 'active') items = items.filter(t => !t.done);
+    else if (tlFilter === 'done') items = items.filter(t => t.done);
+    items = sortTodos(items);
+    if (!items.length) { el.innerHTML = `<div class="empty-line">${tlFilter==='done' ? 'Nothing completed yet.' : 'Nothing here — add a task above.'}</div>`; return; }
+    el.innerHTML = '';
+    items.forEach(t => {
+      const item = document.createElement('div');
+      item.className = 'todo-item';
+      if (t.done) {
+        item.innerHTML = `<div class="todo-box" style="background:var(--success);border-color:var(--success)"></div><span class="todo-text" style="text-decoration:line-through;opacity:0.6">${esc(t.text)}</span><button class="todo-del" data-id="${t.id}">✕</button>`;
+        item.querySelector('.todo-box').onclick = () => updateDoc(dref('todos',t.id),{done:false});
+      } else {
+        item.innerHTML = todoRowHtml(t);
+        item.querySelector('.todo-box').onclick = () => { updateDoc(dref('todos',t.id),{done:true}); showToast('Task completed'); };
+      }
+      item.querySelector('.todo-del').onclick = e => { e.stopPropagation(); deleteDoc(dref('todos',t.id)); showToast('Task removed'); };
+      el.appendChild(item);
+    });
+  }, err => console.error('loadGlobalTodoList error', err));
+  unsubs.push(unsub);
+}
+
+
 function renderContentView() {
   const area  = document.getElementById('content-area');
   const cat   = categories.find(c => c.id === currentView.catId);
@@ -918,10 +1071,42 @@ function renderContentView() {
 
       <div class="section">
         <div class="section-header">
+          <span class="section-label">Checklist</span>
+          <button class="section-add-btn" id="add-check-btn">+ Add item</button>
+        </div>
+        <div id="checklist-${ctxId}"><div class="empty-line">Loading…</div></div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <span class="section-label">Goals & Progress</span>
+          <button class="section-add-btn" id="add-goal-btn">+ Add goal</button>
+        </div>
+        <div id="goals-${ctxId}"><div class="empty-line">Loading…</div></div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
           <span class="section-label">Resources & Links</span>
           <button class="section-add-btn" id="add-link-btn">+ Add link</button>
         </div>
         <div id="links-${ctxId}"><div class="empty-line">Loading…</div></div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <span class="section-label">Quick Ideas</span>
+          <button class="section-add-btn" id="add-idea-btn">+ Add idea</button>
+        </div>
+        <div id="ideas-${ctxId}"><div class="empty-line">Loading…</div></div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <span class="section-label">Key Numbers</span>
+          <button class="section-add-btn" id="add-stat-btn">+ Add number</button>
+        </div>
+        <div id="stats-${ctxId}"><div class="empty-line">Loading…</div></div>
       </div>
 
       <div class="section">
@@ -935,48 +1120,90 @@ function renderContentView() {
   `;
 
   document.getElementById('add-todo-btn').onclick = () => addTodo(ctxId);
+  document.getElementById('add-check-btn').onclick = () => addChecklistItem(ctxId);
+  document.getElementById('add-goal-btn').onclick = () => addGoal(ctxId);
   document.getElementById('add-link-btn').onclick = () => addLinkItem(ctxId);
+  document.getElementById('add-idea-btn').onclick = () => addIdea(ctxId);
+  document.getElementById('add-stat-btn').onclick = () => addStat(ctxId);
   loadTodos(ctxId);
+  loadChecklist(ctxId);
+  loadGoals(ctxId);
   loadLinks(ctxId);
+  loadIdeas(ctxId);
+  loadStats(ctxId);
   loadNotes(ctxId);
 }
 
 // ── TODOS ──
-function loadTodos(ctxId) {
-  const q = query(col('todos'), where('ctxId','==',ctxId), orderBy('createdAt'));
+// NOTE: we query with only a single `where` clause and sort client-side.
+// Combining where() + orderBy() on different fields needs a Firestore
+// composite index — without it the query silently fails and the UI
+// gets stuck on "Loading…" forever. Sorting in JS avoids that entirely.
+function sortTodos(list) {
+  const pOrder = { high:0, med:1, low:2, '':3 };
+  return list.sort((a,b) => {
+    const pa = pOrder[a.priority||''] ?? 3, pb = pOrder[b.priority||''] ?? 3;
+    if (pa !== pb) return pa - pb;
+    if (a.due && b.due) return a.due < b.due ? -1 : a.due > b.due ? 1 : 0;
+    if (a.due) return -1;
+    if (b.due) return 1;
+    return (a.createdAt?.seconds||0) - (b.createdAt?.seconds||0);
+  });
+}
+
+function todoRowHtml(t) {
+  const t0 = today();
+  const overdue = t.due && t.due < t0 && !t.done;
+  const badge = t.priority === 'high' ? '<span class="todo-badge badge-high">High</span>'
+    : t.priority === 'med' ? '<span class="todo-badge badge-med">Med</span>'
+    : t.priority === 'low' ? '<span class="todo-badge badge-low">Low</span>' : '';
+  const due = t.due ? `<span class="todo-due${overdue?' overdue':''}">${overdue?'Overdue ':'Due '}${t.due}</span>` : '';
+  return `<div class="todo-box"></div><span class="todo-text">${esc(t.text)}</span><div class="todo-meta">${due}${badge}</div><button class="todo-del" data-id="${t.id}">✕</button>`;
+}
+
+function loadTodos(ctxId, targetElId) {
+  const elId = targetElId || `todos-${ctxId}`;
+  const q = query(col('todos'), where('ctxId','==',ctxId));
   const unsub = onSnapshot(q, snap => {
-    const pending = snap.docs.map(d => ({id:d.id,...d.data()})).filter(t => !t.done);
-    const el = document.getElementById(`todos-${ctxId}`);
+    const all = snap.docs.map(d => ({id:d.id,...d.data()}));
+    const pending = sortTodos(all.filter(t => !t.done));
+    const el = document.getElementById(elId);
     if (!el) return unsub();
     if (!pending.length) { el.innerHTML = '<div class="empty-line">No tasks yet — add your first one above.</div>'; return; }
     el.innerHTML = '';
     pending.forEach(t => {
       const item = document.createElement('div');
       item.className = 'todo-item';
-      item.innerHTML = `<div class="todo-box"></div><span class="todo-text">${esc(t.text)}</span><button class="todo-del"data-id="${t.id}">✕</button>`;
+      item.innerHTML = todoRowHtml(t);
       item.querySelector('.todo-box').onclick = () => { item.classList.add('completing'); updateDoc(dref('todos',t.id),{done:true}); setTimeout(()=>item.remove(),350); };
       item.querySelector('.todo-del').onclick = e => { e.stopPropagation(); deleteDoc(dref('todos',t.id)); showToast('Task removed'); };
       el.appendChild(item);
     });
-  });
+  }, err => { console.error('loadTodos error', err); showToast('Could not load tasks'); });
   unsubs.push(unsub);
 }
 
 function addTodo(ctxId) {
   openModal('New Task', [
-    { type:'input', id:'text', placeholder:'What do you need to do?' }
+    { type:'input', id:'text', placeholder:'What do you need to do?' },
+    { type:'date', id:'due', label:'Due date (optional)' },
+    { type:'select', id:'priority', label:'Priority', default:'med', options:[
+      { value:'high', label:'High priority' },
+      { value:'med',  label:'Medium priority' },
+      { value:'low',  label:'Low priority' }
+    ]}
   ], 'Add Task', async vals => {
     if (!vals.text) return;
-    await addDoc(col('todos'), { text:vals.text, ctxId, done:false, createdAt:serverTimestamp() });
+    await addDoc(col('todos'), { text:vals.text, ctxId, due:vals.due||null, priority:vals.priority||'med', done:false, createdAt:serverTimestamp() });
     showToast('Task added');
   });
 }
 
 // ── LINKS ──
 function loadLinks(ctxId) {
-  const q = query(col('links'), where('ctxId','==',ctxId), orderBy('createdAt'));
+  const q = query(col('links'), where('ctxId','==',ctxId));
   const unsub = onSnapshot(q, snap => {
-    const links = snap.docs.map(d => ({id:d.id,...d.data()}));
+    const links = snap.docs.map(d => ({id:d.id,...d.data()})).sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0));
     const el    = document.getElementById(`links-${ctxId}`);
     if (!el) return unsub();
     if (!links.length) { el.innerHTML = '<div class="empty-line">No links yet — add YouTube videos, websites, resources…</div>'; return; }
@@ -989,7 +1216,7 @@ function loadLinks(ctxId) {
       row.querySelector('.link-del').onclick = e => { e.preventDefault(); e.stopPropagation(); deleteDoc(dref('links',lk.id)); showToast('Link removed'); };
       el.appendChild(row);
     });
-  });
+  }, err => { console.error('loadLinks error', err); showToast('Could not load links'); });
   unsubs.push(unsub);
 }
 
@@ -1003,6 +1230,130 @@ function addLinkItem(ctxId) {
     if (!url.startsWith('http')) url = 'https://' + url;
     await addDoc(col('links'), { title:vals.title||url, url, ctxId, createdAt:serverTimestamp() });
     showToast('Link saved');
+  });
+}
+
+// ── CHECKLIST (persistent, doesn't disappear when checked) ──
+function loadChecklist(ctxId) {
+  const q = query(col('checklist'), where('ctxId','==',ctxId));
+  const unsub = onSnapshot(q, snap => {
+    const items = snap.docs.map(d => ({id:d.id,...d.data()})).sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0));
+    const el = document.getElementById(`checklist-${ctxId}`);
+    if (!el) return unsub();
+    if (!items.length) { el.innerHTML = '<div class="empty-line">Nothing here yet — good for packing lists, steps, or things to remember.</div>'; return; }
+    el.innerHTML = '';
+    items.forEach(it => {
+      const row = document.createElement('div');
+      row.className = 'check-item' + (it.done?' done':'');
+      row.innerHTML = `<div class="check-box"></div><span class="check-text">${esc(it.text)}</span><button class="todo-del" data-id="${it.id}">✕</button>`;
+      row.querySelector('.check-box').onclick = () => updateDoc(dref('checklist',it.id), { done: !it.done });
+      row.querySelector('.todo-del').onclick = e => { e.stopPropagation(); deleteDoc(dref('checklist',it.id)); showToast('Removed'); };
+      el.appendChild(row);
+    });
+  }, err => console.error('loadChecklist error', err));
+  unsubs.push(unsub);
+}
+function addChecklistItem(ctxId) {
+  openModal('New Checklist Item', [{ type:'input', id:'text', placeholder:'e.g. Pack gloves, Book gym session…' }], 'Add', async vals => {
+    if (!vals.text) return;
+    await addDoc(col('checklist'), { text:vals.text, ctxId, done:false, createdAt:serverTimestamp() });
+    showToast('Added');
+  });
+}
+
+// ── GOALS & PROGRESS ──
+function loadGoals(ctxId) {
+  const q = query(col('goals'), where('ctxId','==',ctxId));
+  const unsub = onSnapshot(q, snap => {
+    const items = snap.docs.map(d => ({id:d.id,...d.data()})).sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0));
+    const el = document.getElementById(`goals-${ctxId}`);
+    if (!el) return unsub();
+    if (!items.length) { el.innerHTML = '<div class="empty-line">No goals yet — track progress on anything with a slider.</div>'; return; }
+    el.innerHTML = '';
+    items.forEach(g => {
+      const pct = g.progress ?? 0;
+      const row = document.createElement('div');
+      row.className = 'goal-item';
+      row.innerHTML = `
+        <div class="goal-top"><span class="goal-title">${esc(g.title)}</span><span class="goal-pct">${pct}%</span></div>
+        <div class="goal-bar-track"><div class="goal-bar-fill" style="width:${pct}%"></div></div>
+        <input type="range" min="0" max="100" value="${pct}" class="goal-slider" data-id="${g.id}"/>
+        <div style="text-align:right;margin-top:4px"><button class="goal-del" data-id="${g.id}">Delete goal</button></div>
+      `;
+      const slider = row.querySelector('.goal-slider');
+      const fill = row.querySelector('.goal-bar-fill');
+      const pctEl = row.querySelector('.goal-pct');
+      slider.oninput = () => { fill.style.width = slider.value+'%'; pctEl.textContent = slider.value+'%'; };
+      slider.onchange = () => updateDoc(dref('goals',g.id), { progress: Number(slider.value) });
+      row.querySelector('.goal-del').onclick = () => { deleteDoc(dref('goals',g.id)); showToast('Goal removed'); };
+      el.appendChild(row);
+    });
+  }, err => console.error('loadGoals error', err));
+  unsubs.push(unsub);
+}
+function addGoal(ctxId) {
+  openModal('New Goal', [{ type:'input', id:'title', placeholder:'e.g. Save $1000, Run 10km…' }], 'Add Goal', async vals => {
+    if (!vals.title) return;
+    await addDoc(col('goals'), { title:vals.title, ctxId, progress:0, createdAt:serverTimestamp() });
+    showToast('Goal added');
+  });
+}
+
+// ── QUICK IDEAS ──
+function loadIdeas(ctxId) {
+  const q = query(col('ideas'), where('ctxId','==',ctxId));
+  const unsub = onSnapshot(q, snap => {
+    const items = snap.docs.map(d => ({id:d.id,...d.data()})).sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0));
+    const el = document.getElementById(`ideas-${ctxId}`);
+    if (!el) return unsub();
+    if (!items.length) { el.innerHTML = '<div class="empty-line">No quick ideas yet — jot down anything worth remembering.</div>'; return; }
+    el.innerHTML = '<div class="idea-wrap"></div>';
+    const wrap = el.querySelector('.idea-wrap');
+    items.forEach(it => {
+      const chip = document.createElement('div');
+      chip.className = 'idea-chip';
+      chip.innerHTML = `<span>${esc(it.text)}</span><button data-id="${it.id}">✕</button>`;
+      chip.querySelector('button').onclick = () => { deleteDoc(dref('ideas',it.id)); showToast('Removed'); };
+      wrap.appendChild(chip);
+    });
+  }, err => console.error('loadIdeas error', err));
+  unsubs.push(unsub);
+}
+function addIdea(ctxId) {
+  openModal('New Idea', [{ type:'input', id:'text', placeholder:'Quick thought, tip, or idea…' }], 'Add', async vals => {
+    if (!vals.text) return;
+    await addDoc(col('ideas'), { text:vals.text, ctxId, createdAt:serverTimestamp() });
+    showToast('Idea saved');
+  });
+}
+
+// ── KEY NUMBERS / STATS ──
+function loadStats(ctxId) {
+  const q = query(col('stats'), where('ctxId','==',ctxId));
+  const unsub = onSnapshot(q, snap => {
+    const items = snap.docs.map(d => ({id:d.id,...d.data()})).sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0));
+    const el = document.getElementById(`stats-${ctxId}`);
+    if (!el) return unsub();
+    if (!items.length) { el.innerHTML = '<div class="empty-line">No numbers tracked yet — e.g. "Total profit: $250", "Wins: 12".</div>'; return; }
+    el.innerHTML = '';
+    items.forEach(s => {
+      const row = document.createElement('div');
+      row.className = 'stat-row-item';
+      row.innerHTML = `<span class="stat-row-label">${esc(s.label)}</span><span class="stat-row-value">${esc(s.value)}</span><button class="stat-row-del" data-id="${s.id}">✕</button>`;
+      row.querySelector('.stat-row-del').onclick = () => { deleteDoc(dref('stats',s.id)); showToast('Removed'); };
+      el.appendChild(row);
+    });
+  }, err => console.error('loadStats error', err));
+  unsubs.push(unsub);
+}
+function addStat(ctxId) {
+  openModal('New Key Number', [
+    { type:'input', id:'label', placeholder:'Label (e.g. Total profit)' },
+    { type:'input', id:'value', placeholder:'Value (e.g. $250)' }
+  ], 'Add', async vals => {
+    if (!vals.label || !vals.value) return;
+    await addDoc(col('stats'), { label:vals.label, value:vals.value, ctxId, createdAt:serverTimestamp() });
+    showToast('Added');
   });
 }
 
@@ -1031,25 +1382,54 @@ function openModal(title, fields, confirmLabel, cb) {
   const body = document.getElementById('modal-body');
   body.innerHTML = '';
   const vals = {};
+  const getters = [];
+  let focused = false;
 
   fields.forEach(f => {
-    if (f.type === 'input') {
+    if (f.label) {
+      const lbl = document.createElement('div');
+      lbl.textContent = f.label;
+      lbl.style.cssText = 'font-size:11px;color:var(--text-muted);margin-bottom:5px;font-weight:600;';
+      body.appendChild(lbl);
+    }
+    if (f.type === 'select') {
+      const sel = document.createElement('select');
+      sel.className = 'input-field';
+      (f.options||[]).forEach(opt => {
+        const o = document.createElement('option');
+        o.value = opt.value; o.textContent = opt.label;
+        if (f.default === opt.value) o.selected = true;
+        sel.appendChild(o);
+      });
+      body.appendChild(sel);
+      getters.push(() => { vals[f.id] = sel.value; });
+    } else if (f.type === 'date') {
+      const inp = document.createElement('input');
+      inp.type = 'date'; inp.className = 'input-field';
+      if (f.default) inp.value = f.default;
+      body.appendChild(inp);
+      getters.push(() => { vals[f.id] = inp.value; });
+    } else if (f.type === 'textarea') {
+      const ta = document.createElement('textarea');
+      ta.className = 'input-field notes-area';
+      ta.style.minHeight = '80px';
+      ta.placeholder = f.placeholder || '';
+      body.appendChild(ta);
+      getters.push(() => { vals[f.id] = ta.value.trim(); });
+    } else {
       const inp = document.createElement('input');
       inp.className = 'input-field';
       inp.placeholder = f.placeholder || '';
       inp.autocomplete = 'off';
-      inp.oninput = () => { vals[f.id] = inp.value.trim(); };
-      inp.onkeydown = e => { if (e.key==='Enter') { vals[f.id]=inp.value.trim(); doConfirm(); } };
+      inp.onkeydown = e => { if (e.key==='Enter') doConfirm(); };
       body.appendChild(inp);
-      setTimeout(() => inp.focus(), 60);
+      getters.push(() => { vals[f.id] = inp.value.trim(); });
+      if (!focused) { setTimeout(() => inp.focus(), 60); focused = true; }
     }
   });
 
   function doConfirm() {
-    body.querySelectorAll('input.input-field').forEach((inp,i) => {
-      const field = fields.filter(f=>f.type==='input')[i];
-      if (field) vals[field.id] = inp.value.trim();
-    });
+    getters.forEach(g => g());
     cb(vals);
     closeModal();
   }
