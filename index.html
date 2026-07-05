@@ -388,6 +388,17 @@
     .cal-add-row { display: flex; gap: 8px; margin-top: 10px; }
     .cal-add-row .input-field { margin-bottom: 0; }
 
+    /* ── ENTRIES (title + instructions, category page) ── */
+    .entry-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--r);
+      padding: 12px 14px; margin-bottom: 6px;
+    }
+    .entry-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 5px; }
+    .entry-title { font-size: 13px; font-weight: 600; }
+    .entry-del { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 12px; padding: 2px 6px; border-radius: 3px; flex-shrink: 0; }
+    .entry-del:hover { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .entry-details { font-size: 12px; color: var(--text-sub); line-height: 1.55; white-space: pre-wrap; }
+
     /* ── TODO EXTRAS (priority/due date) ── */
     .todo-meta { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
     .todo-badge { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 10px; white-space: nowrap; }
@@ -1063,10 +1074,10 @@ function renderContentView() {
     <div class="content-body">
       <div class="section">
         <div class="section-header">
-          <span class="section-label">To-Do</span>
-          <button class="section-add-btn" id="add-todo-btn">+ Add task</button>
+          <span class="section-label">Notes & Instructions</span>
+          <button class="section-add-btn" id="add-entry-btn">+ Add</button>
         </div>
-        <div id="todos-${ctxId}"><div class="empty-line">Loading…</div></div>
+        <div id="entries-${ctxId}"><div class="empty-line">Loading…</div></div>
       </div>
 
       <div class="section">
@@ -1087,9 +1098,9 @@ function renderContentView() {
     </div>
   `;
 
-  document.getElementById('add-todo-btn').onclick = () => addTodo(ctxId);
+  document.getElementById('add-entry-btn').onclick = () => addEntry(ctxId);
   document.getElementById('add-link-btn').onclick = () => addLinkItem(ctxId);
-  loadTodos(ctxId);
+  loadEntries(ctxId);
   loadLinks(ctxId);
   loadNotes(ctxId);
 }
@@ -1156,6 +1167,40 @@ function addTodo(ctxId) {
     if (!vals.text) return;
     await addDoc(col('todos'), { text:vals.text, ctxId, due:vals.due||null, priority:vals.priority||'med', done:false, createdAt:serverTimestamp() });
     showToast('Task added');
+  });
+}
+
+// ── ENTRIES (title + instructions — a middle ground between to-do and notes) ──
+function loadEntries(ctxId) {
+  const q = query(col('entries'), where('ctxId','==',ctxId));
+  const unsub = onSnapshot(q, snap => {
+    const items = snap.docs.map(d => ({id:d.id,...d.data()})).sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0));
+    const el = document.getElementById(`entries-${ctxId}`);
+    if (!el) return unsub();
+    if (!items.length) { el.innerHTML = '<div class="empty-line">Nothing here yet — add a title with a few instructions or details next to it.</div>'; return; }
+    el.innerHTML = '';
+    items.forEach(it => {
+      const card = document.createElement('div');
+      card.className = 'entry-card';
+      card.innerHTML = `
+        <div class="entry-top"><span class="entry-title">${esc(it.title)}</span><button class="entry-del" data-id="${it.id}">✕</button></div>
+        ${it.details ? `<div class="entry-details">${esc(it.details)}</div>` : ''}
+      `;
+      card.querySelector('.entry-del').onclick = () => { deleteDoc(dref('entries',it.id)); showToast('Removed'); };
+      el.appendChild(card);
+    });
+  }, err => { console.error('loadEntries error', err); showToast('Could not load'); });
+  unsubs.push(unsub);
+}
+
+function addEntry(ctxId) {
+  openModal('New Entry', [
+    { type:'input', id:'title', placeholder:'Title (e.g. Morning routine, Bet slip idea…)' },
+    { type:'textarea', id:'details', label:'Details / instructions (optional)', placeholder:'Add a few notes or steps here…' }
+  ], 'Add', async vals => {
+    if (!vals.title) return;
+    await addDoc(col('entries'), { title:vals.title, details:vals.details||'', ctxId, createdAt:serverTimestamp() });
+    showToast('Added');
   });
 }
 
