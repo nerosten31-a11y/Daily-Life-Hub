@@ -461,6 +461,39 @@
     .tl-tab { background: var(--surface); border: 1px solid var(--border2); color: var(--text-sub); font-family:'Inter',sans-serif; font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 20px; cursor: pointer; transition: all 0.15s; }
     .tl-tab.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
 
+    /* ── PROJECTS (inside To-Do List page) ── */
+    .proj-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+    .proj-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r-lg); padding: 16px; cursor: pointer;
+      transition: all 0.18s; position: relative;
+    }
+    .proj-card:hover { background: var(--surface2); transform: translateY(-2px); border-color: var(--accent); }
+    .proj-card-name { font-size: 13px; font-weight: 600; padding-right: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .proj-card-sub { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+    .proj-card-del {
+      position: absolute; top: 10px; right: 10px;
+      background: none; border: none; color: var(--text-muted); cursor: pointer;
+      font-size: 11px; padding: 2px 5px; border-radius: 3px; display: none;
+    }
+    .proj-card:hover .proj-card-del { display: block; }
+    .proj-card-del:hover { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .proj-new-card {
+      background: var(--accent-dim); border: 1.5px dashed var(--accent);
+      border-radius: var(--r-lg); padding: 16px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--accent); font-size: 13px; font-weight: 600; transition: all 0.15s;
+      min-height: 62px;
+    }
+    .proj-new-card:hover { background: var(--accent); color: #fff; }
+    .proj-back-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: none; border: none; color: var(--text-sub);
+      font-family: 'Inter', sans-serif; font-size: 12px; cursor: pointer;
+      padding: 4px 0; margin-bottom: 18px; transition: color 0.15s;
+    }
+    .proj-back-btn:hover { color: var(--accent); }
+
     /* ── MOBILE ── */
     @media (max-width: 720px) {
       #sidebar { transform: translateX(-260px); transition: transform 0.25s; }
@@ -596,6 +629,10 @@ let calendarViewDate = new Date();
 let calendarEvents   = [];
 let selectedCalDate  = null;
 
+// projects state (inside To-Do List page)
+let projects        = [];
+let currentProjectId = null;
+
 const col   = n      => collection(db, 'users', currentUser.uid, n);
 const dref  = (n,id) => doc(db, 'users', currentUser.uid, n, id);
 const today = ()     => new Date().toISOString().split('T')[0];
@@ -651,6 +688,11 @@ function initApp() {
     calendarEvents = snap.docs.map(d => ({id:d.id,...d.data()}));
     if (currentView.type === 'calendar') renderCalendar();
   }));
+  unsubs.push(onSnapshot(query(col('projects'), orderBy('createdAt')), snap => {
+    projects = snap.docs.map(d => ({id:d.id,...d.data()}));
+    if (currentView.type === 'todolist') renderTodoListPage();
+    if (currentView.type === 'project') renderProjectPage();
+  }));
   renderHome();
 }
 
@@ -665,10 +707,18 @@ function renderHabitsBar() {
   pending.forEach(h => {
     const chip = document.createElement('div');
     chip.className = 'habit-chip';
+    chip.title = 'Right-click to delete this habit';
     chip.innerHTML = `<div class="habit-ring"></div><span>${esc(h.name)}</span>`;
     chip.onclick = () => {
       chip.classList.add('done');
       updateDoc(dref('habits',h.id), { completedDates: [...(h.completedDates||[]), t] });
+    };
+    chip.oncontextmenu = e => {
+      e.preventDefault();
+      if (confirm(`Delete habit "${h.name}"? This can't be undone.`)) {
+        deleteDoc(dref('habits', h.id));
+        showToast('Habit deleted');
+      }
     };
     el.appendChild(chip);
   });
@@ -693,7 +743,7 @@ function renderSidebar() {
   list.innerHTML = '';
   if (homeBtn) homeBtn.className = 'sidebar-home-btn' + (currentView.type==='home' ? ' active' : '');
   if (calBtn)  calBtn.className  = 'sidebar-home-btn' + (currentView.type==='calendar' ? ' active' : '');
-  if (tlBtn)   tlBtn.className   = 'sidebar-home-btn' + (currentView.type==='todolist' ? ' active' : '');
+  if (tlBtn)   tlBtn.className   = 'sidebar-home-btn' + ((currentView.type==='todolist'||currentView.type==='project') ? ' active' : '');
 
   categories.forEach(cat => {
     const subs    = subcats.filter(s => s.catId === cat.id);
@@ -991,6 +1041,13 @@ function renderTodoListPage() {
       </div>
 
       <div id="tl-list"><div class="empty-line">Loading…</div></div>
+
+      <div class="section" style="margin-top:36px">
+        <div class="section-header">
+          <span class="section-label">Projects</span>
+        </div>
+        <div class="proj-grid" id="proj-grid"></div>
+      </div>
     </div>
   `;
 
@@ -1012,6 +1069,101 @@ function renderTodoListPage() {
   document.getElementById('tl-quick-text').onkeydown = e => { if (e.key==='Enter') submit(); };
 
   loadGlobalTodoList();
+  renderProjectGrid();
+}
+
+function renderProjectGrid() {
+  const grid = document.getElementById('proj-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  projects.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'proj-card';
+    card.innerHTML = `
+      <div class="proj-card-name">${esc(p.name)}</div>
+      <div class="proj-card-sub">Links &amp; searches</div>
+      <button class="proj-card-del" data-id="${p.id}" data-name="${esc(p.name)}">✕</button>
+    `;
+    card.onclick = e => {
+      if (e.target.closest('.proj-card-del')) return;
+      openProject(p.id);
+    };
+    card.querySelector('.proj-card-del').onclick = e => {
+      e.stopPropagation();
+      if (confirm(`Delete project "${p.name}" and all its saved links?`)) {
+        deleteDoc(dref('projects', p.id));
+        showToast('Project deleted');
+      }
+    };
+    grid.appendChild(card);
+  });
+
+  const addCard = document.createElement('div');
+  addCard.className = 'proj-new-card';
+  addCard.textContent = '+ New Project';
+  addCard.onclick = () => {
+    openModal('New Project', [
+      { type:'input', id:'name', placeholder:'e.g. World Cup Bets, eBay Reselling…' }
+    ], 'Create Project', async vals => {
+      if (!vals.name) return;
+      await addDoc(col('projects'), { name:vals.name, createdAt:serverTimestamp() });
+      showToast('Project created');
+    });
+  };
+  grid.appendChild(addCard);
+}
+
+window.openProject = id => {
+  currentProjectId = id;
+  currentView = { type:'project', catId:null, subId:null };
+  renderSidebar(); renderProjectPage(); closeSidebar();
+};
+
+function renderProjectPage() {
+  if (currentView.type !== 'project') return;
+  const area = document.getElementById('content-area');
+  const proj = projects.find(p => p.id === currentProjectId);
+  if (!proj) { window.goTodoList(); return; }
+
+  area.innerHTML = `
+    <div class="home-wrap">
+      <button class="proj-back-btn" id="proj-back-btn">← Back to To-Do List</button>
+      <div class="tl-header">${esc(proj.name)}</div>
+      <div class="tl-sub">Save every link and search you need for this project in one spot.</div>
+
+      <div class="section">
+        <div class="section-header">
+          <span class="section-label">Links &amp; Searches</span>
+          <button class="section-add-btn" id="proj-add-link-btn">+ Add link</button>
+        </div>
+        <div id="links-${proj.id}"><div class="empty-line">Loading…</div></div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <span class="section-label">Project Tasks</span>
+          <button class="section-add-btn" id="proj-add-task-btn">+ Add task</button>
+        </div>
+        <div id="todos-${proj.id}"><div class="empty-line">Loading…</div></div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <span class="section-label">Notes</span>
+          <span style="font-size:10px;color:var(--text-muted)">Saves automatically</span>
+        </div>
+        <textarea class="notes-area" id="notes-${proj.id}" placeholder="Anything else worth keeping for this project…"></textarea>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('proj-back-btn').onclick = window.goTodoList;
+  document.getElementById('proj-add-link-btn').onclick = () => addLinkItem(proj.id);
+  document.getElementById('proj-add-task-btn').onclick = () => addTodo(proj.id);
+  loadLinks(proj.id);
+  loadTodos(proj.id);
+  loadNotes(proj.id);
 }
 
 function loadGlobalTodoList() {
