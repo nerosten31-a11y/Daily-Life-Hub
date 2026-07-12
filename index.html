@@ -1003,6 +1003,18 @@ function dateKey(y,m,d) {
   return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 }
 
+// An event covers a day if that day falls between its start date and end date
+// (single-day events just have date === endDate, since endDate is optional).
+function eventCoversDay(ev, key) {
+  const end = ev.endDate || ev.date;
+  return key >= ev.date && key <= end;
+}
+
+function niceShortDate(key) {
+  const [yy,mm,dd] = key.split('-').map(Number);
+  return new Date(yy, mm-1, dd).toLocaleDateString('en-AU', { day:'numeric', month:'short' });
+}
+
 function renderCalendar() {
   if (currentView.type !== 'calendar') return;
   const area = document.getElementById('content-area');
@@ -1019,6 +1031,7 @@ function renderCalendar() {
         <div class="cal-month-title">${MONTH_NAMES[m]} ${y}</div>
         <button class="cal-nav-btn" id="cal-next">›</button>
         <button class="cal-today-btn" id="cal-today-btn">Today — ${MONTH_NAMES[new Date().getMonth()]} ${new Date().getDate()}</button>
+        <button class="cal-today-btn" id="cal-multiday-btn" style="margin-left:8px">+ Multi-day event</button>
       </div>
       <div class="cal-grid" id="cal-grid">
         ${DOW_NAMES.map(d=>`<div class="cal-dow">${d}</div>`).join('')}
@@ -1033,7 +1046,7 @@ function renderCalendar() {
     const key = dateKey(y,m,d);
     const isToday = key === t;
     const isSelected = key === selectedCalDate;
-    const count = calendarEvents.filter(ev => ev.date === key).length;
+    const count = calendarEvents.filter(ev => eventCoversDay(ev, key)).length;
     const cell = document.createElement('div');
     cell.className = 'cal-day' + (isToday?' today':'') + (isSelected?' selected':'');
     cell.innerHTML = `<div class="cal-day-num">${d}</div>${count ? `<div class="cal-day-count">${count} item${count>1?'s':''}</div><div class="cal-day-dot"></div>` : ''}`;
@@ -1044,6 +1057,18 @@ function renderCalendar() {
   document.getElementById('cal-prev').onclick = () => { calendarViewDate = new Date(y, m-1, 1); renderCalendar(); };
   document.getElementById('cal-next').onclick = () => { calendarViewDate = new Date(y, m+1, 1); renderCalendar(); };
   document.getElementById('cal-today-btn').onclick = () => { calendarViewDate = new Date(); selectedCalDate = t; renderCalendar(); };
+  document.getElementById('cal-multiday-btn').onclick = () => {
+    openModal('New Multi-day Event', [
+      { type:'input', id:'text', placeholder:'e.g. 5 pillowcases arriving' },
+      { type:'date', id:'start', label:'Start date', default: selectedCalDate || t },
+      { type:'date', id:'end',   label:'End date',   default: selectedCalDate || t }
+    ], 'Add to Calendar', async vals => {
+      if (!vals.text || !vals.start) return;
+      const end = vals.end && vals.end >= vals.start ? vals.end : vals.start;
+      await addDoc(col('calendarEvents'), { date: vals.start, endDate: end, text: vals.text, createdAt: serverTimestamp() });
+      showToast('Added to calendar');
+    });
+  };
 
   renderCalPanel();
 }
@@ -1051,7 +1076,7 @@ function renderCalendar() {
 function renderCalPanel() {
   const wrap = document.getElementById('cal-panel-wrap');
   if (!wrap || !selectedCalDate) return;
-  const entries = calendarEvents.filter(ev => ev.date === selectedCalDate);
+  const entries = calendarEvents.filter(ev => eventCoversDay(ev, selectedCalDate));
   const [yy,mm,dd] = selectedCalDate.split('-').map(Number);
   const niceDate = new Date(yy, mm-1, dd).toLocaleDateString('en-AU', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
 
@@ -1059,7 +1084,11 @@ function renderCalPanel() {
     <div class="cal-panel">
       <div class="cal-panel-title">${niceDate}</div>
       <div id="cal-entries">
-        ${entries.length ? entries.map(ev => `<div class="cal-entry"><span>${esc(ev.text)}</span><button data-id="${ev.id}">✕</button></div>`).join('') : `<div class="empty-line">Nothing added for this day yet.</div>`}
+        ${entries.length ? entries.map(ev => {
+          const isRange = ev.endDate && ev.endDate !== ev.date;
+          const rangeLabel = isRange ? `<span style="font-size:10px;color:var(--text-muted);margin-right:6px">${niceShortDate(ev.date)} – ${niceShortDate(ev.endDate)}</span>` : '';
+          return `<div class="cal-entry">${rangeLabel}<span>${esc(ev.text)}</span><button data-id="${ev.id}">✕</button></div>`;
+        }).join('') : `<div class="empty-line">Nothing added for this day yet.</div>`}
       </div>
       <div class="cal-add-row">
         <input class="input-field" id="cal-new-entry" placeholder="Add something for this day…"/>
@@ -1077,7 +1106,7 @@ function renderCalPanel() {
   const submit = async () => {
     const val = input.value.trim();
     if (!val) return;
-    await addDoc(col('calendarEvents'), { date: selectedCalDate, text: val, createdAt: serverTimestamp() });
+    await addDoc(col('calendarEvents'), { date: selectedCalDate, endDate: selectedCalDate, text: val, createdAt: serverTimestamp() });
     input.value = '';
     showToast('Added to calendar');
   };
@@ -1705,8 +1734,18 @@ function openListModal(title, items) {
         <div class="habit-ring" style="flex-shrink:0"></div>
         ${h.link ? '<span class="habit-link-icon">🔗</span>' : ''}
         <span style="flex:1">${esc(h.name)}</span>
+        <button class="todo-del" style="display:block" data-id="${h.id}" data-name="${esc(h.name)}">✕</button>
       </div>
     `).join('');
+    body.querySelectorAll('.todo-del').forEach(btn => {
+      btn.onclick = () => {
+        if (confirm(`Delete habit "${btn.dataset.name}"? This can't be undone.`)) {
+          deleteDoc(dref('habits', btn.dataset.id));
+          showToast('Habit deleted');
+          btn.closest('div').remove();
+        }
+      };
+    });
   }
   document.getElementById('modal-cancel').style.display = 'none';
   const confirmBtn = document.getElementById('modal-confirm');
