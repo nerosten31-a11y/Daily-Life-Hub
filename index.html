@@ -209,7 +209,10 @@
     .stat-card {
       background: var(--surface); border: 1px solid var(--border);
       border-radius: var(--r); padding: 18px 22px; flex: 1; min-width: 110px;
+      transition: all 0.15s;
     }
+    .stat-card.clickable { cursor: pointer; }
+    .stat-card.clickable:hover { background: var(--surface2); border-color: var(--accent); transform: translateY(-2px); }
     .stat-num { font-size: 28px; font-weight: 700; letter-spacing: -1px; color: var(--accent); line-height: 1; margin-bottom: 4px; }
     .stat-label { font-size: 11px; color: var(--text-sub); }
 
@@ -915,8 +918,8 @@ function renderHome() {
       <div class="home-greeting">Regret</div>
       <div class="stats-row">
         <div class="stat-card"><div class="stat-num">${categories.length}</div><div class="stat-label">Categories</div></div>
-        <div class="stat-card"><div class="stat-num">${habits.length}</div><div class="stat-label">Daily Habits</div></div>
-        <div class="stat-card"><div class="stat-num">${left}</div><div class="stat-label">Habits left today</div></div>
+        <div class="stat-card clickable" id="stat-all-habits"><div class="stat-num">${habits.length}</div><div class="stat-label">Daily Habits</div></div>
+        <div class="stat-card clickable" id="stat-left-habits"><div class="stat-num">${left}</div><div class="stat-label">Habits left today</div></div>
       </div>
       ${categories.length ? `
         <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:var(--text-muted);margin-bottom:12px">Your Categories</div>
@@ -927,6 +930,14 @@ function renderHome() {
         </div>`}
     </div>
   `;
+
+  document.getElementById('stat-all-habits').onclick = () => {
+    openListModal('All Daily Habits', habits);
+  };
+  document.getElementById('stat-left-habits').onclick = () => {
+    const pending = habits.filter(x => !(x.completedDates||[]).includes(t));
+    openListModal('Habits Left Today', pending);
+  };
 
   const grid = document.getElementById('cat-grid');
   if (grid) {
@@ -1682,10 +1693,33 @@ async function loadTaskNotes(ctxId) {
   }
 }
 
+// ── SIMPLE LIST MODAL (read-only — used for "Daily Habits" / "Habits left today") ──
+function openListModal(title, items) {
+  document.getElementById('modal-title').textContent = title;
+  const body = document.getElementById('modal-body');
+  if (!items.length) {
+    body.innerHTML = '<div class="empty-line">Nothing here right now.</div>';
+  } else {
+    body.innerHTML = items.map(h => `
+      <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px;font-size:13px;">
+        <div class="habit-ring" style="flex-shrink:0"></div>
+        ${h.link ? '<span class="habit-link-icon">🔗</span>' : ''}
+        <span style="flex:1">${esc(h.name)}</span>
+      </div>
+    `).join('');
+  }
+  document.getElementById('modal-cancel').style.display = 'none';
+  const confirmBtn = document.getElementById('modal-confirm');
+  confirmBtn.textContent = 'Close';
+  confirmBtn.onclick = closeModal;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
 // ── MODAL ──
 function openModal(title, fields, confirmLabel, cb) {
   document.getElementById('modal-title').textContent = title;
   document.getElementById('modal-confirm').textContent = confirmLabel || 'Add';
+  document.getElementById('modal-cancel').style.display = '';
 
   const body = document.getElementById('modal-body');
   body.innerHTML = '';
