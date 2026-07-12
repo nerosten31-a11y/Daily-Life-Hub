@@ -493,6 +493,7 @@
       padding: 4px 0; margin-bottom: 18px; transition: color 0.15s;
     }
     .proj-back-btn:hover { color: var(--accent); }
+    .notes-area-sm { min-height: 70px; }
 
     /* ── MOBILE ── */
     @media (max-width: 720px) {
@@ -1150,6 +1151,14 @@ function renderProjectPage() {
 
       <div class="section">
         <div class="section-header">
+          <span class="section-label">Quick Notes</span>
+          <span style="font-size:10px;color:var(--text-muted)">Saves automatically</span>
+        </div>
+        <textarea class="notes-area notes-area-sm" id="taskscratch-${proj.id}" placeholder="Jot down anything about these tasks…"></textarea>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
           <span class="section-label">Notes</span>
           <span style="font-size:10px;color:var(--text-muted)">Saves automatically</span>
         </div>
@@ -1164,6 +1173,7 @@ function renderProjectPage() {
   loadLinks(proj.id);
   loadTodos(proj.id);
   loadNotes(proj.id);
+  loadTaskNotes(proj.id);
 }
 
 function loadGlobalTodoList() {
@@ -1308,16 +1318,10 @@ function loadTodos(ctxId, targetElId) {
 
 function addTodo(ctxId) {
   openModal('New Task', [
-    { type:'input', id:'text', placeholder:'What do you need to do?' },
-    { type:'date', id:'due', label:'Due date (optional)' },
-    { type:'select', id:'priority', label:'Priority', default:'med', options:[
-      { value:'high', label:'High priority' },
-      { value:'med',  label:'Medium priority' },
-      { value:'low',  label:'Low priority' }
-    ]}
+    { type:'input', id:'text', placeholder:'What do you need to do?' }
   ], 'Add Task', async vals => {
     if (!vals.text) return;
-    await addDoc(col('todos'), { text:vals.text, ctxId, due:vals.due||null, priority:vals.priority||'med', done:false, createdAt:serverTimestamp() });
+    await addDoc(col('todos'), { text:vals.text, ctxId, due:null, priority:'', done:false, createdAt:serverTimestamp() });
     showToast('Task added');
   });
 }
@@ -1525,6 +1529,23 @@ async function loadNotes(ctxId) {
       clearTimeout(timer);
       timer = setTimeout(async () => {
         await setDoc(dref('notes',ctxId), { content:ta.value, updated:serverTimestamp() });
+        showToast('Notes saved');
+      }, 1200);
+    };
+  }
+}
+
+// ── QUICK TASK SCRATCH NOTES (small box just below Project Tasks) ──
+async function loadTaskNotes(ctxId) {
+  const snap = await getDoc(dref('taskNotes',ctxId));
+  const ta   = document.getElementById(`taskscratch-${ctxId}`);
+  if (ta && snap.exists()) ta.value = snap.data().content || '';
+  if (ta) {
+    let timer;
+    ta.oninput = () => {
+      clearTimeout(timer);
+      timer = setTimeout(async () => {
+        await setDoc(dref('taskNotes',ctxId), { content:ta.value, updated:serverTimestamp() });
         showToast('Notes saved');
       }, 1200);
     };
