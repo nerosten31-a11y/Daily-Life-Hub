@@ -94,6 +94,11 @@
     }
     .habit-chip:hover { border-color: var(--accent); transform: translateY(-1px); }
 
+    .habit-chip.has-link { border-style: dashed; border-color: var(--accent); background: var(--accent-dim); }
+    .habit-chip.has-link:hover { background: var(--accent); color: #fff; }
+    .habit-chip.has-link:hover .habit-ring { border-color: #fff; }
+    .habit-link-icon { font-size: 10px; flex-shrink: 0; opacity: 0.75; }
+
     .habit-ring { width: 14px; height: 14px; border: 1.5px solid var(--text-muted); border-radius: 50%; flex-shrink: 0; }
 
     @keyframes chipOut {
@@ -495,6 +500,33 @@
     .proj-back-btn:hover { color: var(--accent); }
     .notes-area-sm { min-height: 70px; }
 
+    /* ── QUICK LINKS PAGE ── */
+    .qlink-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; margin-top: 8px; }
+    .qlink-card {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r-lg); padding: 14px; cursor: pointer;
+      transition: all 0.18s; position: relative; text-decoration: none; color: var(--text);
+    }
+    .qlink-card:hover { background: var(--surface2); border-color: var(--accent); transform: translateY(-2px); }
+    .qlink-favicon { width: 22px; height: 22px; border-radius: 5px; flex-shrink: 0; }
+    .qlink-title { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 14px; }
+    .qlink-del {
+      position: absolute; top: 8px; right: 8px;
+      background: none; border: none; color: var(--text-muted); cursor: pointer;
+      font-size: 11px; padding: 2px 5px; border-radius: 3px; display: none;
+    }
+    .qlink-card:hover .qlink-del { display: block; }
+    .qlink-del:hover { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .qlink-new-card {
+      background: var(--accent-dim); border: 1.5px dashed var(--accent);
+      border-radius: var(--r-lg); padding: 14px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--accent); font-size: 13px; font-weight: 600; transition: all 0.15s;
+      min-height: 50px;
+    }
+    .qlink-new-card:hover { background: var(--accent); color: #fff; }
+
     /* ── MOBILE ── */
     @media (max-width: 720px) {
       #sidebar { transform: translateX(-260px); transition: transform 0.25s; }
@@ -543,6 +575,7 @@
     <div class="sidebar-home-btn" id="home-btn" onclick="goHome()">🏠 Home</div>
     <div class="sidebar-home-btn" id="calendar-btn" onclick="goCalendar()">📅 Calendar</div>
     <div class="sidebar-home-btn" id="todolist-btn" onclick="goTodoList()">✅ To-Do List</div>
+    <div class="sidebar-home-btn" id="quicklinks-btn" onclick="goQuickLinks()">🔗 Quick Links</div>
     <div class="sidebar-divider"></div>
     <div class="sidebar-section-label">
       Categories
@@ -634,6 +667,9 @@ let selectedCalDate  = null;
 let projects        = [];
 let currentProjectId = null;
 
+// quick links state (standalone page for everyday links)
+let quickLinks = [];
+
 const col   = n      => collection(db, 'users', currentUser.uid, n);
 const dref  = (n,id) => doc(db, 'users', currentUser.uid, n, id);
 const today = ()     => new Date().toISOString().split('T')[0];
@@ -694,6 +730,10 @@ function initApp() {
     if (currentView.type === 'todolist') renderTodoListPage();
     if (currentView.type === 'project') renderProjectPage();
   }));
+  unsubs.push(onSnapshot(query(col('quickLinks'), orderBy('createdAt')), snap => {
+    quickLinks = snap.docs.map(d => ({id:d.id,...d.data()}));
+    if (currentView.type === 'quicklinks') renderQuickLinksPage();
+  }));
   renderHome();
 }
 
@@ -707,13 +747,36 @@ function renderHabitsBar() {
   if (!pending.length) { el.innerHTML = '<span class="all-done-msg">✓ All habits done today!</span>'; return; }
   pending.forEach(h => {
     const chip = document.createElement('div');
-    chip.className = 'habit-chip';
-    chip.title = 'Right-click to delete this habit';
-    chip.innerHTML = `<div class="habit-ring"></div><span>${esc(h.name)}</span>`;
-    chip.onclick = () => {
+    const hasLink = !!h.link;
+    chip.className = 'habit-chip' + (hasLink ? ' has-link' : '');
+    chip.title = hasLink
+      ? 'Click to open the link — double-click to mark done. Right-click to delete.'
+      : 'Click to mark done. Right-click to delete.';
+    chip.innerHTML = `<div class="habit-ring"></div>${hasLink ? '<span class="habit-link-icon">🔗</span>' : ''}<span>${esc(h.name)}</span>`;
+
+    const completeHabit = () => {
       chip.classList.add('done');
       updateDoc(dref('habits',h.id), { completedDates: [...(h.completedDates||[]), t] });
     };
+
+    if (hasLink) {
+      let clickTimer = null;
+      chip.onclick = () => {
+        if (clickTimer) {
+          clearTimeout(clickTimer);
+          clickTimer = null;
+          completeHabit();
+        } else {
+          clickTimer = setTimeout(() => {
+            clickTimer = null;
+            window.open(h.link, '_blank', 'noopener');
+          }, 260);
+        }
+      };
+    } else {
+      chip.onclick = completeHabit;
+    }
+
     chip.oncontextmenu = e => {
       e.preventDefault();
       if (confirm(`Delete habit "${h.name}"? This can't be undone.`)) {
@@ -727,10 +790,13 @@ function renderHabitsBar() {
 
 document.getElementById('add-habit-btn').onclick = () => {
   openModal('New Daily Habit', [
-    { type:'input', id:'name', placeholder:'100 push-ups, Daily reading…' }
+    { type:'input', id:'name', placeholder:'100 push-ups, Daily reading…' },
+    { type:'input', id:'link', label:'Link (optional)', placeholder:'e.g. https://duolingo.com — for habits done on a website' }
   ], 'Add Habit', async vals => {
     if (!vals.name) return;
-    await addDoc(col('habits'), { name:vals.name, completedDates:[], createdAt:serverTimestamp() });
+    let link = vals.link ? vals.link.trim() : '';
+    if (link && !link.startsWith('http')) link = 'https://' + link;
+    await addDoc(col('habits'), { name:vals.name, link: link || null, completedDates:[], createdAt:serverTimestamp() });
     showToast('Habit added');
   });
 };
@@ -741,10 +807,12 @@ function renderSidebar() {
   const homeBtn = document.getElementById('home-btn');
   const calBtn  = document.getElementById('calendar-btn');
   const tlBtn   = document.getElementById('todolist-btn');
+  const qlBtn   = document.getElementById('quicklinks-btn');
   list.innerHTML = '';
   if (homeBtn) homeBtn.className = 'sidebar-home-btn' + (currentView.type==='home' ? ' active' : '');
   if (calBtn)  calBtn.className  = 'sidebar-home-btn' + (currentView.type==='calendar' ? ' active' : '');
   if (tlBtn)   tlBtn.className   = 'sidebar-home-btn' + ((currentView.type==='todolist'||currentView.type==='project') ? ' active' : '');
+  if (qlBtn)   qlBtn.className   = 'sidebar-home-btn' + (currentView.type==='quicklinks' ? ' active' : '');
 
   categories.forEach(cat => {
     const subs    = subcats.filter(s => s.catId === cat.id);
@@ -1174,6 +1242,68 @@ function renderProjectPage() {
   loadTodos(proj.id);
   loadNotes(proj.id);
   loadTaskNotes(proj.id);
+}
+
+// ── QUICK LINKS PAGE (standalone — everyday sites you open a lot) ──
+window.goQuickLinks = () => {
+  currentView = { type:'quicklinks', catId:null, subId:null };
+  document.documentElement.style.setProperty('--accent', '#6d5dfc');
+  document.documentElement.style.setProperty('--accent-dim', 'rgba(109,93,252,0.12)');
+  renderSidebar(); renderQuickLinksPage(); closeSidebar();
+};
+
+function renderQuickLinksPage() {
+  if (currentView.type !== 'quicklinks') return;
+  const area = document.getElementById('content-area');
+
+  area.innerHTML = `
+    <div class="home-wrap">
+      <div class="tl-header">Quick Links</div>
+      <div class="tl-sub">The everyday sites you open all the time — Sudoku, TradingView, whatever — one click away.</div>
+      <div class="qlink-grid" id="qlink-grid"></div>
+    </div>
+  `;
+
+  const grid = document.getElementById('qlink-grid');
+  quickLinks.forEach(lk => {
+    let host = '';
+    try { host = new URL(lk.url).hostname.replace('www.',''); } catch {}
+    const card = document.createElement('a');
+    card.className = 'qlink-card';
+    card.href = lk.url;
+    card.target = '_blank';
+    card.rel = 'noopener';
+    card.innerHTML = `
+      <img class="qlink-favicon" src="https://www.google.com/s2/favicons?domain=${host}&sz=64" onerror="this.style.display='none'"/>
+      <span class="qlink-title">${esc(lk.title || host)}</span>
+      <button class="qlink-del" data-id="${lk.id}" data-name="${esc(lk.title||host)}">✕</button>
+    `;
+    card.querySelector('.qlink-del').onclick = e => {
+      e.preventDefault(); e.stopPropagation();
+      if (confirm(`Remove "${lk.title||host}"?`)) {
+        deleteDoc(dref('quickLinks', lk.id));
+        showToast('Removed');
+      }
+    };
+    grid.appendChild(card);
+  });
+
+  const addCard = document.createElement('div');
+  addCard.className = 'qlink-new-card';
+  addCard.textContent = '+ Add Link';
+  addCard.onclick = () => {
+    openModal('Add Quick Link', [
+      { type:'input', id:'title', placeholder:'Title  (e.g. Sudoku, TradingView)' },
+      { type:'input', id:'url',   placeholder:'URL  (https://tradingview.com/…)' }
+    ], 'Save Link', async vals => {
+      if (!vals.url) return;
+      let url = vals.url;
+      if (!url.startsWith('http')) url = 'https://' + url;
+      await addDoc(col('quickLinks'), { title:vals.title||url, url, createdAt:serverTimestamp() });
+      showToast('Link saved');
+    });
+  };
+  grid.appendChild(addCard);
 }
 
 function loadGlobalTodoList() {
