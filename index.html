@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Daily Life Hub</title>
+  <title>Bloom Droc</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -577,7 +577,7 @@
 <div id="login-page">
   <div class="login-card">
     <div class="login-logo">⚡</div>
-    <h1>Daily Life Hub</h1>
+    <h1>Bloom Droc</h1>
     <p>Your personal command centre — habits, tasks, links, and goals all in one place.</p>
     <button class="google-btn" id="google-signin-btn">
       <svg width="18" height="18" viewBox="0 0 24 24">
@@ -603,6 +603,7 @@
 
   <div id="sidebar">
     <div class="sidebar-home-btn" id="home-btn" onclick="goHome()">🏠 Home</div>
+    <div id="school-nav"></div>
     <div class="sidebar-home-btn" id="calendar-btn" onclick="goCalendar()">📅 Calendar</div>
     <div class="sidebar-home-btn" id="todolist-btn" onclick="goTodoList()">✅ To-Do List</div>
     <div class="sidebar-home-btn" id="quicklinks-btn" onclick="goQuickLinks()">🔗 Quick Links</div>
@@ -674,9 +675,15 @@ const PALETTE = [
 ];
 
 // Auto-assign next color — guaranteed sequential, no bugs
+// (School is pinned and fixed-color, so it's excluded from this rotation)
 function pickColor() {
-  return PALETTE[categories.length % PALETTE.length];
+  const count = categories.filter(c => !c.special).length;
+  return PALETTE[count % PALETTE.length];
 }
+
+// School is pinned outside the normal Categories list and always gets this one color
+const SCHOOL_COLOR = '#fbbf24';
+let schoolInitAttempted = false;
 
 // ── STATE ──
 let currentUser = null;
@@ -749,6 +756,10 @@ function initApp() {
   }));
   unsubs.push(onSnapshot(query(col('categories'), orderBy('createdAt')), snap => {
     categories = snap.docs.map(d => ({id:d.id,...d.data()}));
+    if (!schoolInitAttempted && !categories.some(c => c.special === 'school')) {
+      schoolInitAttempted = true;
+      addDoc(col('categories'), { name:'School', color:SCHOOL_COLOR, special:'school', createdAt:serverTimestamp() });
+    }
     renderSidebar();
     if (currentView.type === 'home') renderHome();
   }));
@@ -852,6 +863,7 @@ function renderSidebar() {
   const tlBtn   = document.getElementById('todolist-btn');
   const qlBtn   = document.getElementById('quicklinks-btn');
   const remBtn  = document.getElementById('reminders-btn');
+  const schoolNav = document.getElementById('school-nav');
   list.innerHTML = '';
   if (homeBtn) homeBtn.className = 'sidebar-home-btn' + (currentView.type==='home' ? ' active' : '');
   if (calBtn)  calBtn.className  = 'sidebar-home-btn' + (currentView.type==='calendar' ? ' active' : '');
@@ -859,7 +871,38 @@ function renderSidebar() {
   if (qlBtn)   qlBtn.className   = 'sidebar-home-btn' + (currentView.type==='quicklinks' ? ' active' : '');
   if (remBtn)  remBtn.className  = 'sidebar-home-btn' + (currentView.type==='reminders' ? ' active' : '');
 
-  categories.forEach(cat => {
+  // ── School: pinned right below Home, own fixed color, own subcategories (subjects) ──
+  const schoolCat = categories.find(c => c.special === 'school');
+  if (schoolNav) {
+    if (!schoolCat) {
+      schoolNav.innerHTML = '';
+    } else {
+      const subs   = subcats.filter(s => s.catId === schoolCat.id);
+      const isOpen = openCats.has(schoolCat.id);
+      const color  = schoolCat.color || SCHOOL_COLOR;
+      const isActive = currentView.catId === schoolCat.id && !currentView.subId;
+      schoolNav.innerHTML = `
+        <div class="category-header${isActive?' active':''}" data-catid="${schoolCat.id}" style="border-left-color:${color}">
+          <span class="cat-arrow${isOpen?' open':''}">▶</span>
+          <div class="cat-color-dot" style="background:${color}"></div>
+          <span class="cat-name">🎓 School</span>
+          ${subs.length ? `<span class="cat-count">${subs.length}</span>` : ''}
+          <div class="cat-actions">
+            <button class="icon-btn" data-action="addsub" data-catid="${schoolCat.id}" title="Add subject">+</button>
+          </div>
+        </div>
+        ${isOpen && subs.length ? `<div class="subcategories">${subs.map(s=>`
+          <div class="sub-item${currentView.subId===s.id?' active':''}" data-subid="${s.id}" data-catid="${schoolCat.id}">
+            <div class="sub-dot" style="background:${color}"></div>
+            <span class="sub-name">${esc(s.name)}</span>
+            <div class="sub-actions"><button class="icon-btn" data-action="delsub" data-subid="${s.id}" data-name="${esc(s.name)}">✕</button></div>
+          </div>`).join('')}</div>` : ''}
+      `;
+      schoolNav.onclick = sidebarDelegatedClick;
+    }
+  }
+
+  categories.filter(cat => !cat.special).forEach(cat => {
     const subs    = subcats.filter(s => s.catId === cat.id);
     const isOpen  = openCats.has(cat.id);
     const color   = cat.color || '#6d5dfc';
@@ -887,29 +930,32 @@ function renderSidebar() {
     list.appendChild(wrap);
   });
 
-  list.onclick = e => {
-    const btn = e.target.closest('[data-action]');
-    if (btn) {
-      e.stopPropagation();
-      const {action,catid,subid,name} = btn.dataset;
-      if (action==='addsub') openAddSub(catid);
-      if (action==='delcat') { if(confirm(`Delete "${name}" and all its content?`)) { deleteDoc(dref('categories',catid)); if(currentView.catId===catid){goHome();} showToast('Deleted'); } }
-      if (action==='delsub') { if(confirm(`Delete "${name}"?`)) { deleteDoc(dref('subcats',subid)); if(currentView.subId===subid){goHome();} showToast('Deleted'); } }
-      return;
-    }
-    const subEl = e.target.closest('[data-subid]');
-    if (subEl && !e.target.closest('.sub-actions')) {
-      currentView = { type:'sub', catId:subEl.dataset.catid, subId:subEl.dataset.subid };
-      renderSidebar(); renderContentView(); closeSidebar(); return;
-    }
-    const catEl = e.target.closest('[data-catid]');
-    if (catEl && !e.target.closest('.cat-actions') && !e.target.closest('[data-subid]')) {
-      const id = catEl.dataset.catid;
-      openCats.has(id) ? openCats.delete(id) : openCats.add(id);
-      currentView = { type:'cat', catId:id, subId:null };
-      renderSidebar(); renderContentView(); closeSidebar();
-    }
-  };
+  list.onclick = sidebarDelegatedClick;
+}
+
+// Shared click handler for both the regular categories list and the pinned School nav
+function sidebarDelegatedClick(e) {
+  const btn = e.target.closest('[data-action]');
+  if (btn) {
+    e.stopPropagation();
+    const {action,catid,subid,name} = btn.dataset;
+    if (action==='addsub') openAddSub(catid);
+    if (action==='delcat') { if(confirm(`Delete "${name}" and all its content?`)) { deleteDoc(dref('categories',catid)); if(currentView.catId===catid){goHome();} showToast('Deleted'); } }
+    if (action==='delsub') { if(confirm(`Delete "${name}"?`)) { deleteDoc(dref('subcats',subid)); if(currentView.subId===subid){goHome();} showToast('Deleted'); } }
+    return;
+  }
+  const subEl = e.target.closest('[data-subid]');
+  if (subEl && !e.target.closest('.sub-actions')) {
+    currentView = { type:'sub', catId:subEl.dataset.catid, subId:subEl.dataset.subid };
+    renderSidebar(); renderContentView(); closeSidebar(); return;
+  }
+  const catEl = e.target.closest('[data-catid]');
+  if (catEl && !e.target.closest('.cat-actions') && !e.target.closest('[data-subid]')) {
+    const id = catEl.dataset.catid;
+    openCats.has(id) ? openCats.delete(id) : openCats.add(id);
+    currentView = { type:'cat', catId:id, subId:null };
+    renderSidebar(); renderContentView(); closeSidebar();
+  }
 }
 
 // ── ADD CATEGORY ──
@@ -955,16 +1001,17 @@ function renderHome() {
   const area = document.getElementById('content-area');
   const t = today();
   const left = habits.filter(x => !(x.completedDates||[]).includes(t)).length;
+  const realCategories = categories.filter(c => !c.special);
 
   area.innerHTML = `
     <div class="home-wrap">
       <div class="home-greeting">Regret</div>
       <div class="stats-row">
-        <div class="stat-card"><div class="stat-num">${categories.length}</div><div class="stat-label">Categories</div></div>
+        <div class="stat-card"><div class="stat-num">${realCategories.length}</div><div class="stat-label">Categories</div></div>
         <div class="stat-card clickable" id="stat-all-habits"><div class="stat-num">${habits.length}</div><div class="stat-label">Daily Habits</div></div>
         <div class="stat-card clickable" id="stat-left-habits"><div class="stat-num">${left}</div><div class="stat-label">Habits left today</div></div>
       </div>
-      ${categories.length ? `
+      ${realCategories.length ? `
         <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:var(--text-muted);margin-bottom:12px">Your Categories</div>
         <div class="cat-grid" id="cat-grid"></div>` : `
         <div style="text-align:center;padding:48px 20px;color:var(--text-muted);font-size:13px">
@@ -984,7 +1031,7 @@ function renderHome() {
 
   const grid = document.getElementById('cat-grid');
   if (grid) {
-    categories.forEach(cat => {
+    realCategories.forEach(cat => {
       const subs  = subcats.filter(s => s.catId === cat.id);
       const color = cat.color || '#6d5dfc';
       const isOpen = homeOpenCats.has(cat.id);
@@ -1421,7 +1468,7 @@ function fireReminderNotification(r) {
   showToast(`⏰ Reminder: ${r.text}`);
   if (typeof Notification === 'undefined') return;
   if (Notification.permission === 'granted') {
-    new Notification('Daily Life Hub', { body: r.text, icon: '' });
+    new Notification('Bloom Droc', { body: r.text, icon: '' });
   }
 }
 
