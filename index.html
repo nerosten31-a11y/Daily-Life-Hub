@@ -1457,10 +1457,11 @@ function renderRemindersPage() {
 
       <div class="tl-quickadd">
         <input class="input-field" id="rem-text" placeholder="What's the reminder?"/>
-        <input class="input-field" type="date" id="rem-date"/>
+        <input class="input-field" type="date" id="rem-date" title="Date (optional — defaults to today)"/>
         <input class="input-field" type="time" id="rem-time"/>
         <button class="btn-primary" id="rem-add-btn">Add</button>
       </div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:-14px;margin-bottom:20px">Leave the date blank for a reminder later today.</div>
 
       <div id="rem-list">
         ${sorted.length ? sorted.map(r => {
@@ -1495,8 +1496,9 @@ function renderRemindersPage() {
     const dateEl = document.getElementById('rem-date');
     const timeEl = document.getElementById('rem-time');
     const text = textEl.value.trim();
-    if (!text || !dateEl.value || !timeEl.value) { showToast('Add a title, date and time'); return; }
-    const when = `${dateEl.value}T${timeEl.value}`;
+    if (!text || !timeEl.value) { showToast('Add a title and time'); return; }
+    const dateVal = dateEl.value || today();
+    const when = `${dateVal}T${timeEl.value}`;
     await addDoc(col('reminders'), { text, when, fired:false, createdAt:serverTimestamp() });
     textEl.value = ''; dateEl.value = ''; timeEl.value = '';
     showToast('Reminder set');
