@@ -313,6 +313,9 @@
     .link-del { display: none; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 12px; padding: 2px 6px; border-radius: 3px; flex-shrink: 0; }
     .link-row:hover .link-del { display: block; }
     .link-del:hover { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .link-copy { display: none; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 11px; padding: 2px 8px; border-radius: 3px; flex-shrink: 0; }
+    .link-row:hover .link-copy { display: block; }
+    .link-copy:hover { background: var(--accent-dim); color: var(--accent); }
 
     /* ── NOTES ── */
     .notes-area {
@@ -528,6 +531,13 @@
     }
     .qlink-card:hover .qlink-del { display: block; }
     .qlink-del:hover { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .qlink-copy {
+      position: absolute; top: 8px; right: 30px;
+      background: none; border: none; color: var(--text-muted); cursor: pointer;
+      font-size: 11px; padding: 2px 5px; border-radius: 3px; display: none;
+    }
+    .qlink-card:hover .qlink-copy { display: block; }
+    .qlink-copy:hover { background: var(--accent-dim); color: var(--accent); }
     .qlink-new-card {
       background: var(--accent-dim); border: 1.5px dashed var(--accent);
       border-radius: var(--r-lg); padding: 14px; cursor: pointer;
@@ -1435,8 +1445,13 @@ function renderQuickLinksPage() {
     card.innerHTML = `
       <img class="qlink-favicon" src="https://www.google.com/s2/favicons?domain=${host}&sz=64" onerror="this.style.display='none'"/>
       <span class="qlink-title">${esc(lk.title || host)}</span>
+      <button class="qlink-copy" data-url="${esc(lk.url)}" title="Copy link">Copy</button>
       <button class="qlink-del" data-id="${lk.id}" data-name="${esc(lk.title||host)}">✕</button>
     `;
+    card.querySelector('.qlink-copy').onclick = e => {
+      e.preventDefault(); e.stopPropagation();
+      navigator.clipboard.writeText(lk.url).then(() => showToast('Link copied')).catch(() => showToast('Could not copy'));
+    };
     card.querySelector('.qlink-del').onclick = e => {
       e.preventDefault(); e.stopPropagation();
       if (confirm(`Remove "${lk.title||host}"?`)) {
@@ -2004,7 +2019,11 @@ function loadLinks(ctxId) {
       let host = '';
       try { host = new URL(lk.url).hostname.replace('www.',''); } catch {}
       const row = document.createElement('div');
-      row.innerHTML = `<a class="link-row" href="${esc(lk.url)}" target="_blank" rel="noopener"><img class="link-fav" src="https://www.google.com/s2/favicons?domain=${host}&sz=32" onerror="this.style.display='none'"/><span class="link-title">${esc(lk.title||host)}</span><span class="link-domain">${esc(host)}</span><button class="link-del" data-id="${lk.id}">✕</button></a>`;
+      row.innerHTML = `<a class="link-row" href="${esc(lk.url)}" target="_blank" rel="noopener"><img class="link-fav" src="https://www.google.com/s2/favicons?domain=${host}&sz=32" onerror="this.style.display='none'"/><span class="link-title">${esc(lk.title||host)}</span><span class="link-domain">${esc(host)}</span><button class="link-copy" data-url="${esc(lk.url)}">Copy</button><button class="link-del" data-id="${lk.id}">✕</button></a>`;
+      row.querySelector('.link-copy').onclick = e => {
+        e.preventDefault(); e.stopPropagation();
+        navigator.clipboard.writeText(lk.url).then(() => showToast('Link copied')).catch(() => showToast('Could not copy'));
+      };
       row.querySelector('.link-del').onclick = e => { e.preventDefault(); e.stopPropagation(); deleteDoc(dref('links',lk.id)); showToast('Link removed'); };
       el.appendChild(row);
     });
