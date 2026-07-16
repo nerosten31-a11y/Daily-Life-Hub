@@ -537,6 +537,15 @@
     }
     .qlink-new-card:hover { background: var(--accent); color: #fff; }
 
+    /* ── VAULT ── */
+    .vault-card { background: var(--surface); border: 1px solid var(--border2); border-radius: var(--r-lg); padding: 24px; max-width: 380px; }
+    .vault-card-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+    .vault-card-sub { font-size: 12px; color: var(--text-sub); margin-bottom: 16px; line-height: 1.5; }
+    .vault-entry { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 6px; }
+    .vault-entry-label { font-size: 12px; font-weight: 600; color: var(--text-sub); width: 140px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .vault-entry-value { font-size: 12px; font-family: 'Courier New', monospace; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+    .vault-unlocked-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
+
     /* ── REMINDERS PAGE ── */
     .rem-notice {
       display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -608,6 +617,7 @@
     <div class="sidebar-home-btn" id="todolist-btn" onclick="goTodoList()">✅ To-Do List</div>
     <div class="sidebar-home-btn" id="quicklinks-btn" onclick="goQuickLinks()">🔗 Quick Links</div>
     <div class="sidebar-home-btn" id="reminders-btn" onclick="goReminders()">⏰ Reminders</div>
+    <div class="sidebar-home-btn" id="vault-btn" onclick="goVault()">🔒 Vault</div>
     <div class="sidebar-divider"></div>
     <div class="sidebar-section-label">
       Categories
@@ -712,6 +722,13 @@ let quickLinks = [];
 let reminders = [];
 let reminderCheckStarted = false;
 
+// vault state — vaultKey and vaultDecryptedCache NEVER touch Firestore, in-memory only
+let vaultMeta = null;
+let vaultEntries = [];
+let vaultKey = null;
+let vaultDecryptedCache = {};
+let vaultLockTimer = null;
+
 const col   = n      => collection(db, 'users', currentUser.uid, n);
 const dref  = (n,id) => doc(db, 'users', currentUser.uid, n, id);
 const today = ()     => new Date().toISOString().split('T')[0];
@@ -732,6 +749,8 @@ document.getElementById('google-signin-btn').onclick = async () => {
 
 document.getElementById('signout-btn').onclick = async () => {
   unsubs.forEach(u => u()); unsubs = [];
+  vaultKey = null; vaultDecryptedCache = {}; vaultMeta = null; vaultEntries = [];
+  clearTimeout(vaultLockTimer);
   await signOut(auth);
 };
 
@@ -783,6 +802,14 @@ function initApp() {
   unsubs.push(onSnapshot(query(col('reminders'), orderBy('when')), snap => {
     reminders = snap.docs.map(d => ({id:d.id,...d.data()}));
     if (currentView.type === 'reminders') renderRemindersPage();
+  }));
+  unsubs.push(onSnapshot(dref('vaultMeta','meta'), snap => {
+    vaultMeta = snap.exists() ? snap.data() : null;
+    if (currentView.type === 'vault') renderVaultBody();
+  }));
+  unsubs.push(onSnapshot(query(col('vaultEntries'), orderBy('createdAt')), snap => {
+    vaultEntries = snap.docs.map(d => ({id:d.id,...d.data()}));
+    if (currentView.type === 'vault' && vaultKey) renderVaultEntries();
   }));
   if (!reminderCheckStarted) {
     reminderCheckStarted = true;
@@ -863,6 +890,7 @@ function renderSidebar() {
   const tlBtn   = document.getElementById('todolist-btn');
   const qlBtn   = document.getElementById('quicklinks-btn');
   const remBtn  = document.getElementById('reminders-btn');
+  const vaultBtn = document.getElementById('vault-btn');
   const schoolNav = document.getElementById('school-nav');
   list.innerHTML = '';
   if (homeBtn) homeBtn.className = 'sidebar-home-btn' + (currentView.type==='home' ? ' active' : '');
@@ -870,6 +898,7 @@ function renderSidebar() {
   if (tlBtn)   tlBtn.className   = 'sidebar-home-btn' + ((currentView.type==='todolist'||currentView.type==='project') ? ' active' : '');
   if (qlBtn)   qlBtn.className   = 'sidebar-home-btn' + (currentView.type==='quicklinks' ? ' active' : '');
   if (remBtn)  remBtn.className  = 'sidebar-home-btn' + (currentView.type==='reminders' ? ' active' : '');
+  if (vaultBtn) vaultBtn.className = 'sidebar-home-btn' + (currentView.type==='vault' ? ' active' : '');
 
   // ── School: pinned right below Home, own fixed color, own subcategories (subjects) ──
   const schoolCat = categories.find(c => c.special === 'school');
@@ -1555,6 +1584,227 @@ function renderRemindersPage() {
   };
   document.getElementById('rem-add-btn').onclick = submit;
   document.getElementById('rem-text').onkeydown = e => { if (e.key==='Enter') submit(); };
+}
+
+// ── VAULT (password-protected, AES-256 encrypted client-side) ──
+// The vault password is NEVER sent anywhere or stored — it only ever exists
+// in this tab's memory long enough to derive an encryption key. Firestore
+// only ever sees ciphertext. There is no password reset — losing the
+// password means losing what's stored.
+function b64FromBytes(bytes) {
+  let binary = '';
+  bytes.forEach(b => binary += String.fromCharCode(b));
+  return btoa(binary);
+}
+function bytesFromB64(b64) {
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i=0; i<binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+async function deriveVaultKey(password, saltBytes) {
+  const enc = new TextEncoder();
+  const baseKey = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    { name:'PBKDF2', salt: saltBytes, iterations: 250000, hash:'SHA-256' },
+    baseKey,
+    { name:'AES-GCM', length:256 },
+    false,
+    ['encrypt','decrypt']
+  );
+}
+async function vaultEncrypt(key, plaintext) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const cipherBuf = await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, new TextEncoder().encode(plaintext));
+  return { iv: b64FromBytes(iv), cipher: b64FromBytes(new Uint8Array(cipherBuf)) };
+}
+async function vaultDecrypt(key, ivB64, cipherB64) {
+  const iv = bytesFromB64(ivB64);
+  const cipherBytes = bytesFromB64(cipherB64);
+  const plainBuf = await crypto.subtle.decrypt({name:'AES-GCM', iv}, key, cipherBytes);
+  return new TextDecoder().decode(plainBuf);
+}
+
+function resetVaultLockTimer() {
+  clearTimeout(vaultLockTimer);
+  vaultLockTimer = setTimeout(() => lockVault(false), 5 * 60 * 1000);
+}
+function lockVault(manual) {
+  vaultKey = null;
+  vaultDecryptedCache = {};
+  clearTimeout(vaultLockTimer);
+  if (manual) showToast('Vault locked');
+  if (currentView.type === 'vault') renderVaultBody();
+}
+
+window.goVault = () => {
+  currentView = { type:'vault', catId:null, subId:null };
+  document.documentElement.style.setProperty('--accent', '#6d5dfc');
+  document.documentElement.style.setProperty('--accent-dim', 'rgba(109,93,252,0.12)');
+  renderSidebar(); renderVaultPage(); closeSidebar();
+};
+
+function renderVaultPage() {
+  if (currentView.type !== 'vault') return;
+  const area = document.getElementById('content-area');
+  area.innerHTML = `
+    <div class="home-wrap">
+      <div class="tl-header">🔒 Vault</div>
+      <div class="tl-sub">A password-protected, encrypted space for tokens, keys, and anything else you don't want lying around in plain text.</div>
+      <div id="vault-body"></div>
+    </div>
+  `;
+  renderVaultBody();
+}
+
+function renderVaultBody() {
+  const body = document.getElementById('vault-body');
+  if (!body) return;
+
+  if (!vaultMeta) {
+    body.innerHTML = `
+      <div class="vault-card">
+        <div class="vault-card-title">Set up your vault</div>
+        <div class="vault-card-sub">Choose a password. This is separate from your Google login — if you forget it, there's no way to reset it, so keep it somewhere safe.</div>
+        <input class="input-field" type="password" id="vault-pw1" placeholder="New vault password"/>
+        <input class="input-field" type="password" id="vault-pw2" placeholder="Confirm password"/>
+        <button class="btn-primary" id="vault-setup-btn">Create Vault</button>
+      </div>
+    `;
+    document.getElementById('vault-setup-btn').onclick = vaultSetup;
+    return;
+  }
+
+  if (!vaultKey) {
+    body.innerHTML = `
+      <div class="vault-card">
+        <div class="vault-card-title">🔒 Vault is locked</div>
+        <div class="vault-card-sub">Enter your password to view what's inside.</div>
+        <input class="input-field" type="password" id="vault-unlock-pw" placeholder="Vault password"/>
+        <button class="btn-primary" id="vault-unlock-btn">Unlock</button>
+      </div>
+    `;
+    document.getElementById('vault-unlock-btn').onclick = vaultUnlock;
+    document.getElementById('vault-unlock-pw').onkeydown = e => { if (e.key==='Enter') vaultUnlock(); };
+    return;
+  }
+
+  body.innerHTML = `
+    <div class="vault-unlocked-bar">
+      <span style="font-size:12px;color:var(--success)">🔓 Unlocked — auto-locks after 5 minutes idle</span>
+      <div style="display:flex;gap:8px">
+        <button class="section-add-btn" id="vault-add-btn">+ Add secret</button>
+        <button class="btn-ghost" id="vault-lock-btn" style="padding:6px 14px">Lock now</button>
+      </div>
+    </div>
+    <div id="vault-entries"></div>
+  `;
+  document.getElementById('vault-add-btn').onclick = vaultAddEntry;
+  document.getElementById('vault-lock-btn').onclick = () => lockVault(true);
+  renderVaultEntries();
+}
+
+function renderVaultEntries() {
+  const el = document.getElementById('vault-entries');
+  if (!el) return;
+  if (!vaultEntries.length) { el.innerHTML = '<div class="empty-line">Nothing stored yet — add your GitHub token or anything else you want kept safe.</div>'; return; }
+  el.innerHTML = '';
+  vaultEntries.forEach(entry => {
+    const revealed = vaultDecryptedCache[entry.id] !== undefined;
+    const row = document.createElement('div');
+    row.className = 'vault-entry';
+    row.innerHTML = `
+      <div class="vault-entry-label">${esc(entry.label)}</div>
+      <div class="vault-entry-value">${revealed ? esc(vaultDecryptedCache[entry.id]) : '••••••••••••'}</div>
+      <button class="icon-btn" data-action="reveal" data-id="${entry.id}">${revealed ? '🙈' : '👁'}</button>
+      <button class="icon-btn" data-action="copy" data-id="${entry.id}">Copy</button>
+      <button class="rem-del" data-action="delete" data-id="${entry.id}" data-label="${esc(entry.label)}">✕</button>
+    `;
+    el.appendChild(row);
+  });
+  el.onclick = vaultEntryClick;
+}
+
+async function vaultSetup() {
+  const pw1 = document.getElementById('vault-pw1').value;
+  const pw2 = document.getElementById('vault-pw2').value;
+  if (!pw1 || pw1.length < 4) { showToast('Use at least 4 characters'); return; }
+  if (pw1 !== pw2) { showToast("Passwords don't match"); return; }
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const key = await deriveVaultKey(pw1, salt);
+  const check = await vaultEncrypt(key, 'VAULT_OK');
+  await setDoc(dref('vaultMeta','meta'), { salt: b64FromBytes(salt), checkIv: check.iv, checkCipher: check.cipher, createdAt: serverTimestamp() });
+  vaultKey = key;
+  vaultDecryptedCache = {};
+  showToast('Vault created');
+  resetVaultLockTimer();
+  renderVaultBody();
+}
+
+async function vaultUnlock() {
+  const pwEl = document.getElementById('vault-unlock-pw');
+  const pw = pwEl.value;
+  if (!pw) return;
+  try {
+    const salt = bytesFromB64(vaultMeta.salt);
+    const key = await deriveVaultKey(pw, salt);
+    const decoded = await vaultDecrypt(key, vaultMeta.checkIv, vaultMeta.checkCipher);
+    if (decoded !== 'VAULT_OK') throw new Error('bad password');
+    vaultKey = key;
+    vaultDecryptedCache = {};
+    showToast('Vault unlocked');
+    resetVaultLockTimer();
+    renderVaultBody();
+  } catch {
+    showToast('Incorrect password');
+  }
+}
+
+function vaultAddEntry() {
+  openModal('Add to Vault', [
+    { type:'input', id:'label', placeholder:'e.g. GitHub token' },
+    { type:'textarea', id:'value', label:'Secret value', placeholder:'Paste the token or secret here' }
+  ], 'Save', async vals => {
+    if (!vals.label || !vals.value) return;
+    const { iv, cipher } = await vaultEncrypt(vaultKey, vals.value);
+    await addDoc(col('vaultEntries'), { label:vals.label, iv, cipher, createdAt:serverTimestamp() });
+    showToast('Saved to vault');
+    resetVaultLockTimer();
+  });
+}
+
+async function vaultEntryClick(e) {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  const { action, id, label } = btn.dataset;
+  const entry = vaultEntries.find(x => x.id === id);
+  if (!entry) return;
+
+  if (action === 'reveal') {
+    if (vaultDecryptedCache[id] !== undefined) {
+      delete vaultDecryptedCache[id];
+    } else {
+      try {
+        vaultDecryptedCache[id] = await vaultDecrypt(vaultKey, entry.iv, entry.cipher);
+      } catch { showToast('Could not decrypt — try unlocking again'); return; }
+    }
+    resetVaultLockTimer();
+    renderVaultEntries();
+  } else if (action === 'copy') {
+    try {
+      let plain = vaultDecryptedCache[id];
+      if (plain === undefined) plain = await vaultDecrypt(vaultKey, entry.iv, entry.cipher);
+      await navigator.clipboard.writeText(plain);
+      showToast('Copied to clipboard');
+      resetVaultLockTimer();
+    } catch { showToast('Could not copy'); }
+  } else if (action === 'delete') {
+    if (confirm(`Delete "${label}" from the vault?`)) {
+      deleteDoc(dref('vaultEntries', id));
+      delete vaultDecryptedCache[id];
+      showToast('Removed from vault');
+    }
+  }
 }
 
 function loadGlobalTodoList() {
