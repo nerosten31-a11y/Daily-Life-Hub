@@ -704,6 +704,7 @@ function pickColor() {
 // School is pinned outside the normal Categories list and always gets this one color
 const SCHOOL_COLOR = '#fbbf24';
 let schoolInitAttempted = false;
+let findHubSeedAttempted = false;
 
 // ── STATE ──
 let currentUser = null;
@@ -808,6 +809,15 @@ function initApp() {
   unsubs.push(onSnapshot(query(col('quickLinks'), orderBy('createdAt')), snap => {
     quickLinks = snap.docs.map(d => ({id:d.id,...d.data()}));
     quickLinks.forEach(lk => backfillRawUrl('quickLinks', lk));
+    if (!findHubSeedAttempted && !quickLinks.some(lk => (lk.url||'').includes('google.com/android/find'))) {
+      findHubSeedAttempted = true;
+      addDoc(col('quickLinks'), {
+        title: 'Google Find Hub',
+        url: 'https://www.google.com/android/find/about',
+        raw: 'https://www.google.com/android/find/about',
+        createdAt: serverTimestamp()
+      });
+    }
     if (currentView.type === 'quicklinks') renderQuickLinksPage();
   }));
   unsubs.push(onSnapshot(query(col('reminders'), orderBy('when')), snap => {
