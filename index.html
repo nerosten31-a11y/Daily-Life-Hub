@@ -887,7 +887,7 @@ document.getElementById('add-habit-btn').onclick = () => {
   ], 'Add Habit', async vals => {
     if (!vals.name) return;
     let link = vals.link ? vals.link.trim() : '';
-    if (link && !link.startsWith('http')) link = 'https://' + link;
+    if (link) link = normalizeUrl(link);
     await addDoc(col('habits'), { name:vals.name, link: link || null, completedDates:[], createdAt:serverTimestamp() });
     showToast('Habit added');
   });
@@ -1473,8 +1473,7 @@ function renderQuickLinksPage() {
     ], 'Save Link', async vals => {
       if (!vals.url) return;
       const raw = vals.url;
-      let url = raw;
-      if (!url.startsWith('http')) url = 'https://' + url;
+      const url = normalizeUrl(raw);
       await addDoc(col('quickLinks'), { title:vals.title||url, url, raw, createdAt:serverTimestamp() });
       showToast('Link saved');
     });
@@ -1608,6 +1607,16 @@ function renderRemindersPage() {
 // in this tab's memory long enough to derive an encryption key. Firestore
 // only ever sees ciphertext. There is no password reset — losing the
 // password means losing what's stored.
+// Detects ANY URL scheme (http:, https:, file:, ftp:, mailto:, etc.) —
+// not just http/https — so we only add "https://" to bare domains like
+// "duolingo.com", never to links that already specify their own protocol.
+function hasScheme(str) {
+  return /^[a-z][a-z0-9+.-]*:/i.test(str);
+}
+function normalizeUrl(input) {
+  return hasScheme(input) ? input : 'https://' + input;
+}
+
 // Reconstructs what was originally typed for links saved before we started
 // storing the raw text. We only ever auto-add "https://" when it's missing,
 // so stripping it back off exactly recovers the original for those cases.
@@ -1616,9 +1625,21 @@ function guessRawUrl(url) {
   if (url.startsWith('http://'))  return url.slice('http://'.length);
   return url;
 }
+// Repairs entries that got a mistaken "https://" glued onto a URL that
+// already had its own scheme (e.g. https://file:///... from the old bug).
+function fixMistakenPrefix(url) {
+  if (url.startsWith('https://')) {
+    const rest = url.slice('https://'.length);
+    if (hasScheme(rest)) return rest;
+  }
+  return url;
+}
 function backfillRawUrl(collectionName, item) {
-  if (item.raw) return; // already has it, nothing to do
-  updateDoc(dref(collectionName, item.id), { raw: guessRawUrl(item.url) }).catch(() => {});
+  const fixedUrl = fixMistakenPrefix(item.url);
+  const updates = {};
+  if (fixedUrl !== item.url) updates.url = fixedUrl;
+  if (!item.raw) updates.raw = guessRawUrl(fixedUrl);
+  if (Object.keys(updates).length) updateDoc(dref(collectionName, item.id), updates).catch(() => {});
 }
 
 function b64FromBytes(bytes) {
@@ -2054,8 +2075,7 @@ function addLinkItem(ctxId) {
   ], 'Save Link', async vals => {
     if (!vals.url) return;
     const raw = vals.url;
-    let url = raw;
-    if (!url.startsWith('http')) url = 'https://' + url;
+    const url = normalizeUrl(raw);
     await addDoc(col('links'), { title:vals.title||url, url, raw, ctxId, createdAt:serverTimestamp() });
     showToast('Link saved');
   });
