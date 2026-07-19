@@ -807,6 +807,7 @@ function initApp() {
   }));
   unsubs.push(onSnapshot(query(col('quickLinks'), orderBy('createdAt')), snap => {
     quickLinks = snap.docs.map(d => ({id:d.id,...d.data()}));
+    quickLinks.forEach(lk => backfillRawUrl('quickLinks', lk));
     if (currentView.type === 'quicklinks') renderQuickLinksPage();
   }));
   unsubs.push(onSnapshot(query(col('reminders'), orderBy('when')), snap => {
@@ -1607,6 +1608,19 @@ function renderRemindersPage() {
 // in this tab's memory long enough to derive an encryption key. Firestore
 // only ever sees ciphertext. There is no password reset — losing the
 // password means losing what's stored.
+// Reconstructs what was originally typed for links saved before we started
+// storing the raw text. We only ever auto-add "https://" when it's missing,
+// so stripping it back off exactly recovers the original for those cases.
+function guessRawUrl(url) {
+  if (url.startsWith('https://')) return url.slice('https://'.length);
+  if (url.startsWith('http://'))  return url.slice('http://'.length);
+  return url;
+}
+function backfillRawUrl(collectionName, item) {
+  if (item.raw) return; // already has it, nothing to do
+  updateDoc(dref(collectionName, item.id), { raw: guessRawUrl(item.url) }).catch(() => {});
+}
+
 function b64FromBytes(bytes) {
   let binary = '';
   bytes.forEach(b => binary += String.fromCharCode(b));
@@ -2012,6 +2026,7 @@ function loadLinks(ctxId) {
   const q = query(col('links'), where('ctxId','==',ctxId));
   const unsub = onSnapshot(q, snap => {
     const links = snap.docs.map(d => ({id:d.id,...d.data()})).sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0));
+    links.forEach(lk => backfillRawUrl('links', lk));
     const el    = document.getElementById(`links-${ctxId}`);
     if (!el) return unsub();
     if (!links.length) { el.innerHTML = '<div class="empty-line">No links yet — add YouTube videos, websites, resources…</div>'; return; }
