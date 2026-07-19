@@ -1445,12 +1445,12 @@ function renderQuickLinksPage() {
     card.innerHTML = `
       <img class="qlink-favicon" src="https://www.google.com/s2/favicons?domain=${host}&sz=64" onerror="this.style.display='none'"/>
       <span class="qlink-title">${esc(lk.title || host)}</span>
-      <button class="qlink-copy" data-url="${esc(lk.url)}" title="Copy link">Copy</button>
+      <button class="qlink-copy" data-url="${esc(lk.raw||lk.url)}" title="Copy link">Copy</button>
       <button class="qlink-del" data-id="${lk.id}" data-name="${esc(lk.title||host)}">✕</button>
     `;
     card.querySelector('.qlink-copy').onclick = e => {
       e.preventDefault(); e.stopPropagation();
-      navigator.clipboard.writeText(lk.url).then(() => showToast('Link copied')).catch(() => showToast('Could not copy'));
+      navigator.clipboard.writeText(lk.raw || lk.url).then(() => showToast('Link copied')).catch(() => showToast('Could not copy'));
     };
     card.querySelector('.qlink-del').onclick = e => {
       e.preventDefault(); e.stopPropagation();
@@ -1471,9 +1471,10 @@ function renderQuickLinksPage() {
       { type:'input', id:'url',   placeholder:'URL  (https://tradingview.com/…)' }
     ], 'Save Link', async vals => {
       if (!vals.url) return;
-      let url = vals.url;
+      const raw = vals.url;
+      let url = raw;
       if (!url.startsWith('http')) url = 'https://' + url;
-      await addDoc(col('quickLinks'), { title:vals.title||url, url, createdAt:serverTimestamp() });
+      await addDoc(col('quickLinks'), { title:vals.title||url, url, raw, createdAt:serverTimestamp() });
       showToast('Link saved');
     });
   };
@@ -2019,10 +2020,10 @@ function loadLinks(ctxId) {
       let host = '';
       try { host = new URL(lk.url).hostname.replace('www.',''); } catch {}
       const row = document.createElement('div');
-      row.innerHTML = `<a class="link-row" href="${esc(lk.url)}" target="_blank" rel="noopener"><img class="link-fav" src="https://www.google.com/s2/favicons?domain=${host}&sz=32" onerror="this.style.display='none'"/><span class="link-title">${esc(lk.title||host)}</span><span class="link-domain">${esc(host)}</span><button class="link-copy" data-url="${esc(lk.url)}">Copy</button><button class="link-del" data-id="${lk.id}">✕</button></a>`;
+      row.innerHTML = `<a class="link-row" href="${esc(lk.url)}" target="_blank" rel="noopener"><img class="link-fav" src="https://www.google.com/s2/favicons?domain=${host}&sz=32" onerror="this.style.display='none'"/><span class="link-title">${esc(lk.title||host)}</span><span class="link-domain">${esc(host)}</span><button class="link-copy" data-url="${esc(lk.raw||lk.url)}">Copy</button><button class="link-del" data-id="${lk.id}">✕</button></a>`;
       row.querySelector('.link-copy').onclick = e => {
         e.preventDefault(); e.stopPropagation();
-        navigator.clipboard.writeText(lk.url).then(() => showToast('Link copied')).catch(() => showToast('Could not copy'));
+        navigator.clipboard.writeText(lk.raw || lk.url).then(() => showToast('Link copied')).catch(() => showToast('Could not copy'));
       };
       row.querySelector('.link-del').onclick = e => { e.preventDefault(); e.stopPropagation(); deleteDoc(dref('links',lk.id)); showToast('Link removed'); };
       el.appendChild(row);
@@ -2037,9 +2038,10 @@ function addLinkItem(ctxId) {
     { type:'input', id:'url',   placeholder:'URL  (https://youtube.com/…)' }
   ], 'Save Link', async vals => {
     if (!vals.url) return;
-    let url = vals.url;
+    const raw = vals.url;
+    let url = raw;
     if (!url.startsWith('http')) url = 'https://' + url;
-    await addDoc(col('links'), { title:vals.title||url, url, ctxId, createdAt:serverTimestamp() });
+    await addDoc(col('links'), { title:vals.title||url, url, raw, ctxId, createdAt:serverTimestamp() });
     showToast('Link saved');
   });
 }
