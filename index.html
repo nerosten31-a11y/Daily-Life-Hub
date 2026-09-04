@@ -1755,14 +1755,69 @@ function renderVaultBody() {
       <span style="font-size:12px;color:var(--success)">🔓 Unlocked — auto-locks after 5 minutes idle</span>
       <div style="display:flex;gap:8px">
         <button class="section-add-btn" id="vault-add-btn">+ Add secret</button>
+        <button class="btn-ghost" id="vault-changepw-btn" style="padding:6px 14px">Change password</button>
         <button class="btn-ghost" id="vault-lock-btn" style="padding:6px 14px">Lock now</button>
       </div>
     </div>
+    <div id="vault-changepw-form" style="display:none"></div>
     <div id="vault-entries"></div>
   `;
   document.getElementById('vault-add-btn').onclick = vaultAddEntry;
   document.getElementById('vault-lock-btn').onclick = () => lockVault(true);
+  document.getElementById('vault-changepw-btn').onclick = toggleChangePwForm;
   renderVaultEntries();
+}
+
+function toggleChangePwForm() {
+  const el = document.getElementById('vault-changepw-form');
+  if (!el) return;
+  const showing = el.style.display !== 'none';
+  if (showing) { el.style.display = 'none'; el.innerHTML = ''; return; }
+  el.style.display = 'block';
+  el.innerHTML = `
+    <div class="vault-card" style="margin-bottom:16px">
+      <div class="vault-card-title">Change vault password</div>
+      <div class="vault-card-sub">Everything already stored will be re-encrypted with the new password. Make it long and unique.</div>
+      <input class="input-field" type="password" id="vault-newpw1" placeholder="New vault password"/>
+      <input class="input-field" type="password" id="vault-newpw2" placeholder="Confirm new password"/>
+      <button class="btn-primary" id="vault-changepw-confirm">Change Password</button>
+    </div>
+  `;
+  document.getElementById('vault-changepw-confirm').onclick = vaultChangePassword;
+}
+
+async function vaultChangePassword() {
+  const pw1 = document.getElementById('vault-newpw1').value;
+  const pw2 = document.getElementById('vault-newpw2').value;
+  if (!pw1 || pw1.length < 4) { showToast('Use at least 4 characters'); return; }
+  if (pw1 !== pw2) { showToast("Passwords don't match"); return; }
+
+  try {
+    // Decrypt everything with the current key before we rotate it
+    const decrypted = [];
+    for (const entry of vaultEntries) {
+      const plain = await vaultDecrypt(vaultKey, entry.iv, entry.cipher);
+      decrypted.push({ id: entry.id, plain });
+    }
+
+    const newSalt = crypto.getRandomValues(new Uint8Array(16));
+    const newKey = await deriveVaultKey(pw1, newSalt);
+    const check = await vaultEncrypt(newKey, 'VAULT_OK');
+    await setDoc(dref('vaultMeta','meta'), { salt: b64FromBytes(newSalt), checkIv: check.iv, checkCipher: check.cipher, createdAt: serverTimestamp() });
+
+    for (const item of decrypted) {
+      const { iv, cipher } = await vaultEncrypt(newKey, item.plain);
+      await updateDoc(dref('vaultEntries', item.id), { iv, cipher });
+    }
+
+    vaultKey = newKey;
+    vaultDecryptedCache = {};
+    showToast('Vault password changed');
+    resetVaultLockTimer();
+    renderVaultBody();
+  } catch (e) {
+    showToast('Could not change password — try again');
+  }
 }
 
 function renderVaultEntries() {
