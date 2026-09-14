@@ -181,6 +181,9 @@
 
     .cat-actions { display: none; gap: 2px; }
     .category-header:hover .cat-actions { display: flex; }
+    .cat-draggable .category-header { cursor: grab; }
+    .cat-draggable.dragging { opacity: 0.4; }
+    .cat-draggable.drag-over .category-header { box-shadow: inset 0 2px 0 var(--accent); }
 
     .icon-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 2px 5px; font-size: 11px; border-radius: 3px; transition: all 0.1s; }
     .icon-btn:hover { background: var(--surface3); color: var(--text); }
@@ -327,6 +330,13 @@
     }
     .notes-area:focus { outline: none; border-color: var(--accent); }
     .notes-area::placeholder { color: var(--text-muted); }
+
+    /* Main Notes areas are contenteditable divs so pasted images can render inline */
+    div.notes-area { overflow-y: auto; white-space: pre-wrap; word-break: break-word; cursor: text; }
+    div.notes-area:empty:before { content: attr(data-placeholder); color: var(--text-muted); pointer-events: none; }
+    div.notes-area img { max-width: 100%; border-radius: 6px; margin: 8px 0; display: block; }
+    .notes-uploading { font-size: 11px; color: var(--accent); margin-top: 6px; display: none; }
+    .notes-uploading.show { display: block; }
 
     .empty-line { font-size: 12px; color: var(--text-muted); padding: 6px 0; }
 
@@ -664,6 +674,8 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChang
 import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc,
   onSnapshot, query, orderBy, serverTimestamp, setDoc, getDoc, where }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyBVYZFLkqc1lqHf7wxwGXAY_yRxJnxQhvQ",
@@ -677,6 +689,7 @@ const firebaseConfig = {
 const fbApp = initializeApp(firebaseConfig);
 const auth  = getAuth(fbApp);
 const db    = getFirestore(fbApp);
+const storage = getStorage(fbApp);
 
 // ── PALETTE (gem tones, dark-mode vibrant) ──
 const PALETTE = [
@@ -705,6 +718,7 @@ function pickColor() {
 const SCHOOL_COLOR = '#fbbf24';
 let schoolInitAttempted = false;
 let findHubSeedAttempted = false;
+let draggedCatId = null;
 
 // ── STATE ──
 let currentUser = null;
@@ -790,6 +804,11 @@ function initApp() {
       schoolInitAttempted = true;
       addDoc(col('categories'), { name:'School', color:SCHOOL_COLOR, special:'school', createdAt:serverTimestamp() });
     }
+    // Backfill an "order" field (based on current createdAt order) for any
+    // category that doesn't have one yet, so drag-reordering has something to save to.
+    categories.filter(c => !c.special).forEach((c, i) => {
+      if (c.order === undefined) updateDoc(dref('categories', c.id), { order: i }).catch(() => {});
+    });
     renderSidebar();
     if (currentView.type === 'home') renderHome();
   }));
@@ -952,13 +971,19 @@ function renderSidebar() {
     }
   }
 
-  categories.filter(cat => !cat.special).forEach(cat => {
+  categories.filter(cat => !cat.special)
+    .slice()
+    .sort((a, b) => (a.order ?? 999999) - (b.order ?? 999999))
+    .forEach(cat => {
     const subs    = subcats.filter(s => s.catId === cat.id);
     const isOpen  = openCats.has(cat.id);
     const color   = cat.color || '#6d5dfc';
     const isActive = currentView.catId === cat.id && !currentView.subId;
 
     const wrap = document.createElement('div');
+    wrap.className = 'cat-draggable';
+    wrap.draggable = true;
+    wrap.dataset.catid = cat.id;
     wrap.innerHTML = `
       <div class="category-header${isActive?' active':''}" data-catid="${cat.id}" style="border-left-color:${color}">
         <span class="cat-arrow${isOpen?' open':''}">▶</span>
@@ -977,10 +1002,37 @@ function renderSidebar() {
           <div class="sub-actions"><button class="icon-btn" data-action="delsub" data-subid="${s.id}" data-name="${esc(s.name)}">✕</button></div>
         </div>`).join('')}</div>` : ''}
     `;
+    wrap.addEventListener('dragstart', e => {
+      draggedCatId = cat.id;
+      e.dataTransfer.effectAllowed = 'move';
+      wrap.classList.add('dragging');
+    });
+    wrap.addEventListener('dragend', () => wrap.classList.remove('dragging'));
+    wrap.addEventListener('dragover', e => { e.preventDefault(); wrap.classList.add('drag-over'); });
+    wrap.addEventListener('dragleave', () => wrap.classList.remove('drag-over'));
+    wrap.addEventListener('drop', e => {
+      e.preventDefault();
+      wrap.classList.remove('drag-over');
+      if (draggedCatId && draggedCatId !== cat.id) reorderCategories(draggedCatId, cat.id);
+      draggedCatId = null;
+    });
     list.appendChild(wrap);
   });
 
   list.onclick = sidebarDelegatedClick;
+}
+
+// Move draggedId to sit where targetId currently is, and persist the new order for everyone
+function reorderCategories(draggedId, targetId) {
+  const realCats = categories.filter(c => !c.special).slice().sort((a,b) => (a.order ?? 999999) - (b.order ?? 999999));
+  const fromIdx = realCats.findIndex(c => c.id === draggedId);
+  const toIdx = realCats.findIndex(c => c.id === targetId);
+  if (fromIdx === -1 || toIdx === -1) return;
+  const [moved] = realCats.splice(fromIdx, 1);
+  realCats.splice(toIdx, 0, moved);
+  realCats.forEach((c, i) => {
+    if (c.order !== i) updateDoc(dref('categories', c.id), { order: i }).catch(() => {});
+  });
 }
 
 // Shared click handler for both the regular categories list and the pinned School nav
@@ -1410,7 +1462,8 @@ function renderProjectPage() {
           <span class="section-label">Notes</span>
           <span style="font-size:10px;color:var(--text-muted)">Saves automatically</span>
         </div>
-        <textarea class="notes-area" id="notes-${proj.id}" placeholder="Anything else worth keeping for this project…"></textarea>
+        <div class="notes-area" id="notes-${proj.id}" contenteditable="true" data-placeholder="Anything else worth keeping for this project… (you can paste in images too)"></div>
+        <div class="notes-uploading" id="notes-uploading-${proj.id}">Uploading image…</div>
       </div>
     </div>
   `;
@@ -2002,7 +2055,8 @@ function renderContentView() {
           <span class="section-label">Notes</span>
           <span style="font-size:10px;color:var(--text-muted)">Saves automatically</span>
         </div>
-        <textarea class="notes-area" id="notes-${ctxId}" placeholder="Paste in Google Doc content, write notes, drop in anything…"></textarea>
+        <div class="notes-area" id="notes-${ctxId}" contenteditable="true" data-placeholder="Paste in Google Doc content, write notes, drop in anything… (you can paste in images too)"></div>
+        <div class="notes-uploading" id="notes-uploading-${ctxId}">Uploading image…</div>
       </div>
     </div>
   `;
@@ -2270,20 +2324,81 @@ function addStat(ctxId) {
   });
 }
 
-// ── NOTES ──
+// ── NOTES (contenteditable so pasted images can be embedded inline) ──
 async function loadNotes(ctxId) {
   const snap = await getDoc(dref('notes',ctxId));
   const ta   = document.getElementById(`notes-${ctxId}`);
-  if (ta && snap.exists()) ta.value = snap.data().content || '';
+  if (ta && snap.exists()) ta.innerHTML = snap.data().content || '';
   if (ta) {
     let timer;
-    ta.oninput = () => {
+    const save = () => {
       clearTimeout(timer);
       timer = setTimeout(async () => {
-        await setDoc(dref('notes',ctxId), { content:ta.value, updated:serverTimestamp() });
+        await setDoc(dref('notes',ctxId), { content:ta.innerHTML, updated:serverTimestamp() });
         showToast('Notes saved');
       }, 1200);
     };
+    ta.oninput = save;
+    ta.onpaste = e => handleNotesPaste(e, ctxId, ta, save);
+  }
+}
+
+// Handles paste in a Notes area: images upload to Firebase Storage and get
+// inserted inline; anything else pastes as plain text only (no rich HTML
+// carried over from other sites, to keep formatting clean and predictable).
+async function handleNotesPaste(e, ctxId, ta, save) {
+  const clipboard = e.clipboardData || window.clipboardData;
+  const items = clipboard ? clipboard.items : null;
+  let imageItem = null;
+  if (items) {
+    for (const item of items) {
+      if (item.type && item.type.startsWith('image/')) { imageItem = item; break; }
+    }
+  }
+
+  if (imageItem) {
+    e.preventDefault();
+    const file = imageItem.getAsFile();
+    if (!file) return;
+    const uploadingEl = document.getElementById(`notes-uploading-${ctxId}`);
+    if (uploadingEl) uploadingEl.classList.add('show');
+    try {
+      const ext = (file.type.split('/')[1] || 'png').replace('jpeg','jpg');
+      const path = `users/${currentUser.uid}/note-images/${ctxId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const fileRef = storageRef(storage, path);
+      await uploadBytes(fileRef, file);
+      const url = await getDownloadURL(fileRef);
+      insertImageAtCursor(ta, url);
+      save();
+    } catch (err) {
+      showToast('Could not upload image');
+    } finally {
+      if (uploadingEl) uploadingEl.classList.remove('show');
+    }
+    return;
+  }
+
+  // Plain text only — strip formatting from anything pasted in from elsewhere
+  e.preventDefault();
+  const text = clipboard ? clipboard.getData('text/plain') : '';
+  document.execCommand('insertText', false, text);
+}
+
+function insertImageAtCursor(ta, url) {
+  ta.focus();
+  const img = document.createElement('img');
+  img.src = url;
+  const sel = window.getSelection();
+  if (sel && sel.rangeCount > 0 && ta.contains(sel.anchorNode)) {
+    const range = sel.getRangeAt(0);
+    range.deleteContents();
+    range.insertNode(img);
+    range.setStartAfter(img);
+    range.setEndAfter(img);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  } else {
+    ta.appendChild(img);
   }
 }
 
