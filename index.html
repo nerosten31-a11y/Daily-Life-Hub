@@ -674,8 +674,6 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChang
 import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc,
   onSnapshot, query, orderBy, serverTimestamp, setDoc, getDoc, where }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-import { getStorage, ref as storageRef, uploadBytes, getDownloadURL }
-  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyBVYZFLkqc1lqHf7wxwGXAY_yRxJnxQhvQ",
@@ -689,7 +687,6 @@ const firebaseConfig = {
 const fbApp = initializeApp(firebaseConfig);
 const auth  = getAuth(fbApp);
 const db    = getFirestore(fbApp);
-const storage = getStorage(fbApp);
 
 // ── PALETTE (gem tones, dark-mode vibrant) ──
 const PALETTE = [
@@ -2346,6 +2343,23 @@ async function loadNotes(ctxId) {
 // Handles paste in a Notes area: images upload to Firebase Storage and get
 // inserted inline; anything else pastes as plain text only (no rich HTML
 // carried over from other sites, to keep formatting clean and predictable).
+// Firestore documents cap out around 1MB total, so pasted images are resized
+// and compressed down to fit comfortably, then embedded directly as data —
+// no file storage service needed, works entirely on the free plan.
+async function compressImageToDataUrl(file, maxDim = 700, quality = 0.72) {
+  const bitmap = await createImageBitmap(file);
+  let { width, height } = bitmap;
+  if (width > maxDim || height > maxDim) {
+    if (width >= height) { height = Math.round(height * maxDim / width); width = maxDim; }
+    else { width = Math.round(width * maxDim / height); height = maxDim; }
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width = width; canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(bitmap, 0, 0, width, height);
+  return canvas.toDataURL('image/jpeg', quality);
+}
+
 async function handleNotesPaste(e, ctxId, ta, save) {
   const clipboard = e.clipboardData || window.clipboardData;
   const items = clipboard ? clipboard.items : null;
@@ -2361,17 +2375,21 @@ async function handleNotesPaste(e, ctxId, ta, save) {
     const file = imageItem.getAsFile();
     if (!file) return;
     const uploadingEl = document.getElementById(`notes-uploading-${ctxId}`);
-    if (uploadingEl) uploadingEl.classList.add('show');
+    if (uploadingEl) { uploadingEl.textContent = 'Adding image…'; uploadingEl.classList.add('show'); }
     try {
-      const ext = (file.type.split('/')[1] || 'png').replace('jpeg','jpg');
-      const path = `users/${currentUser.uid}/note-images/${ctxId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const fileRef = storageRef(storage, path);
-      await uploadBytes(fileRef, file);
-      const url = await getDownloadURL(fileRef);
-      insertImageAtCursor(ta, url);
+      let dataUrl = await compressImageToDataUrl(file);
+      if (dataUrl.length > 700000) {
+        // still too big even compressed — squeeze harder once before giving up
+        dataUrl = await compressImageToDataUrl(file, 500, 0.5);
+      }
+      if (dataUrl.length > 700000) {
+        showToast("That image is too large to fit in Notes — try a smaller screenshot");
+        return;
+      }
+      insertImageAtCursor(ta, dataUrl);
       save();
     } catch (err) {
-      showToast('Could not upload image');
+      showToast('Could not add image');
     } finally {
       if (uploadingEl) uploadingEl.classList.remove('show');
     }
