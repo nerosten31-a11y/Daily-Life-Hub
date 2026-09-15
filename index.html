@@ -2342,22 +2342,22 @@ async function loadNotes(ctxId) {
 
 // Handles paste in a Notes area: images upload to Firebase Storage and get
 // inserted inline; anything else pastes as plain text only (no rich HTML
-// carried over from other sites, to keep formatting clean and predictable).
-// Firestore documents cap out around 1MB total, so pasted images are resized
-// and compressed down to fit comfortably, then embedded directly as data —
-// no file storage service needed, works entirely on the free plan.
-async function compressImageToDataUrl(file, maxDim = 700, quality = 0.72) {
-  const bitmap = await createImageBitmap(file);
-  let { width, height } = bitmap;
-  if (width > maxDim || height > maxDim) {
-    if (width >= height) { height = Math.round(height * maxDim / width); width = maxDim; }
-    else { width = Math.round(width * maxDim / height); height = maxDim; }
-  }
-  const canvas = document.createElement('canvas');
-  canvas.width = width; canvas.height = height;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(bitmap, 0, 0, width, height);
-  return canvas.toDataURL('image/jpeg', quality);
+// Images are uploaded to ImgBB (free image host, no billing account needed)
+// and only the resulting link is saved in your notes — fast, and no
+// meaningful size limit, unlike stuffing the whole image into Firestore.
+// NOTE: ImgBB links are technically public (unguessable, but not private).
+const IMGBB_API_KEY = '937246d148f955d58036cc82117325ba';
+
+async function uploadToImgBB(file) {
+  const formData = new FormData();
+  formData.append('image', file);
+  const resp = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+    method: 'POST',
+    body: formData,
+  });
+  const data = await resp.json();
+  if (!data.success) throw new Error((data.error && data.error.message) || 'Upload failed');
+  return data.data.url;
 }
 
 async function handleNotesPaste(e, ctxId, ta, save) {
@@ -2375,21 +2375,13 @@ async function handleNotesPaste(e, ctxId, ta, save) {
     const file = imageItem.getAsFile();
     if (!file) return;
     const uploadingEl = document.getElementById(`notes-uploading-${ctxId}`);
-    if (uploadingEl) { uploadingEl.textContent = 'Adding image…'; uploadingEl.classList.add('show'); }
+    if (uploadingEl) { uploadingEl.textContent = 'Uploading image…'; uploadingEl.classList.add('show'); }
     try {
-      let dataUrl = await compressImageToDataUrl(file);
-      if (dataUrl.length > 700000) {
-        // still too big even compressed — squeeze harder once before giving up
-        dataUrl = await compressImageToDataUrl(file, 500, 0.5);
-      }
-      if (dataUrl.length > 700000) {
-        showToast("That image is too large to fit in Notes — try a smaller screenshot");
-        return;
-      }
-      insertImageAtCursor(ta, dataUrl);
+      const url = await uploadToImgBB(file);
+      insertImageAtCursor(ta, url);
       save();
     } catch (err) {
-      showToast('Could not add image');
+      showToast('Could not upload image — check the ImgBB API key is set up');
     } finally {
       if (uploadingEl) uploadingEl.classList.remove('show');
     }
