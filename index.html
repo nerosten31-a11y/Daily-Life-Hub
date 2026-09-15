@@ -335,6 +335,14 @@
     div.notes-area { overflow-y: auto; white-space: pre-wrap; word-break: break-word; cursor: text; }
     div.notes-area:empty:before { content: attr(data-placeholder); color: var(--text-muted); pointer-events: none; }
     div.notes-area img { max-width: 100%; border-radius: 6px; margin: 8px 0; display: block; }
+    .note-img-wrap {
+      display: inline-block; vertical-align: top;
+      resize: both; overflow: hidden;
+      max-width: 100%; min-width: 60px; min-height: 40px;
+      border: 1px solid var(--border2); border-radius: 6px;
+      margin: 8px 4px 8px 0;
+    }
+    .note-img-wrap img { width: 100%; height: 100%; display: block; margin: 0; border-radius: 0; object-fit: contain; }
     .notes-uploading { font-size: 11px; color: var(--accent); margin-top: 6px; display: none; }
     .notes-uploading.show { display: block; }
 
@@ -2325,7 +2333,10 @@ function addStat(ctxId) {
 async function loadNotes(ctxId) {
   const snap = await getDoc(dref('notes',ctxId));
   const ta   = document.getElementById(`notes-${ctxId}`);
-  if (ta && snap.exists()) ta.innerHTML = snap.data().content || '';
+  if (ta && snap.exists()) {
+    ta.innerHTML = snap.data().content || '';
+    wrapBareImages(ta);
+  }
   if (ta) {
     let timer;
     const save = () => {
@@ -2394,22 +2405,48 @@ async function handleNotesPaste(e, ctxId, ta, save) {
   document.execCommand('insertText', false, text);
 }
 
-function insertImageAtCursor(ta, url) {
-  ta.focus();
+function makeResizableImageWrap(url) {
+  const wrapper = document.createElement('span');
+  wrapper.className = 'note-img-wrap';
+  wrapper.contentEditable = 'false';
+  wrapper.style.width = '280px';
+  wrapper.style.height = '180px';
   const img = document.createElement('img');
   img.src = url;
+  wrapper.appendChild(img);
+  return wrapper;
+}
+
+function insertImageAtCursor(ta, url) {
+  ta.focus();
+  const wrapper = makeResizableImageWrap(url);
   const sel = window.getSelection();
   if (sel && sel.rangeCount > 0 && ta.contains(sel.anchorNode)) {
     const range = sel.getRangeAt(0);
     range.deleteContents();
-    range.insertNode(img);
-    range.setStartAfter(img);
-    range.setEndAfter(img);
+    range.insertNode(wrapper);
+    range.setStartAfter(wrapper);
+    range.setEndAfter(wrapper);
     sel.removeAllRanges();
     sel.addRange(range);
   } else {
-    ta.appendChild(img);
+    ta.appendChild(wrapper);
   }
+}
+
+// Older saved notes have bare <img> tags from before resizing existed —
+// wrap them the same way so they become resizable too, the next time they load.
+function wrapBareImages(container) {
+  container.querySelectorAll('img').forEach(img => {
+    if (img.closest('.note-img-wrap')) return;
+    const wrapper = document.createElement('span');
+    wrapper.className = 'note-img-wrap';
+    wrapper.contentEditable = 'false';
+    wrapper.style.width = '280px';
+    wrapper.style.height = '180px';
+    img.replaceWith(wrapper);
+    wrapper.appendChild(img);
+  });
 }
 
 // ── QUICK TASK SCRATCH NOTES (small box just below Project Tasks) ──
