@@ -565,6 +565,19 @@
     }
     .qlink-new-card:hover { background: var(--accent); color: #fff; }
 
+    /* ── BRAINSTORM ── */
+    .brain-item {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 12px 14px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: var(--r);
+      margin-bottom: 6px;
+    }
+    .brain-text { font-size: 13px; flex: 1; line-height: 1.5; }
+    .brain-link { font-size: 11px; color: var(--accent); text-decoration: none; display: inline-block; margin-top: 4px; }
+    .brain-link:hover { text-decoration: underline; }
+    .brain-time { font-size: 10px; color: var(--text-muted); margin-top: 4px; }
+    .brain-actions { display: flex; gap: 2px; flex-shrink: 0; }
+
     /* ── VAULT ── */
     .vault-card { background: var(--surface); border: 1px solid var(--border2); border-radius: var(--r-lg); padding: 24px; max-width: 380px; }
     .vault-card-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
@@ -646,6 +659,7 @@
     <div class="sidebar-home-btn" id="quicklinks-btn" onclick="goQuickLinks()">🔗 Quick Links</div>
     <div class="sidebar-home-btn" id="reminders-btn" onclick="goReminders()">⏰ Reminders</div>
     <div class="sidebar-home-btn" id="vault-btn" onclick="goVault()">🔒 Vault</div>
+    <div class="sidebar-home-btn" id="brainstorm-btn" onclick="goBrainstorm()">💡 Brainstorm</div>
     <div class="sidebar-divider"></div>
     <div class="sidebar-section-label">
       Categories
@@ -759,6 +773,9 @@ let vaultKey = null;
 let vaultDecryptedCache = {};
 let vaultLockTimer = null;
 
+// brainstorm state — quick-capture space for fleeting ideas
+let brainstormIdeas = [];
+
 const col   = n      => collection(db, 'users', currentUser.uid, n);
 const dref  = (n,id) => doc(db, 'users', currentUser.uid, n, id);
 const today = ()     => new Date().toISOString().split('T')[0];
@@ -856,6 +873,10 @@ function initApp() {
     vaultEntries = snap.docs.map(d => ({id:d.id,...d.data()}));
     if (currentView.type === 'vault' && vaultKey) renderVaultEntries();
   }));
+  unsubs.push(onSnapshot(query(col('brainstorm'), orderBy('createdAt')), snap => {
+    brainstormIdeas = snap.docs.map(d => ({id:d.id,...d.data()}));
+    if (currentView.type === 'brainstorm') renderBrainstormPage();
+  }));
   if (!reminderCheckStarted) {
     reminderCheckStarted = true;
     setInterval(checkReminders, 20000);
@@ -936,6 +957,7 @@ function renderSidebar() {
   const qlBtn   = document.getElementById('quicklinks-btn');
   const remBtn  = document.getElementById('reminders-btn');
   const vaultBtn = document.getElementById('vault-btn');
+  const brainBtn = document.getElementById('brainstorm-btn');
   const schoolNav = document.getElementById('school-nav');
   list.innerHTML = '';
   if (homeBtn) homeBtn.className = 'sidebar-home-btn' + (currentView.type==='home' ? ' active' : '');
@@ -944,6 +966,7 @@ function renderSidebar() {
   if (qlBtn)   qlBtn.className   = 'sidebar-home-btn' + (currentView.type==='quicklinks' ? ' active' : '');
   if (remBtn)  remBtn.className  = 'sidebar-home-btn' + (currentView.type==='reminders' ? ' active' : '');
   if (vaultBtn) vaultBtn.className = 'sidebar-home-btn' + (currentView.type==='vault' ? ' active' : '');
+  if (brainBtn) brainBtn.className = 'sidebar-home-btn' + (currentView.type==='brainstorm' ? ' active' : '');
 
   // ── School: pinned right below Home, own fixed color, own subcategories (subjects) ──
   const schoolCat = categories.find(c => c.special === 'school');
@@ -1979,6 +2002,89 @@ async function vaultEntryClick(e) {
       showToast('Removed from vault');
     }
   }
+}
+
+// ── BRAINSTORM (quick-capture space — dump an idea before a tab eats it) ──
+window.goBrainstorm = () => {
+  currentView = { type:'brainstorm', catId:null, subId:null };
+  document.documentElement.style.setProperty('--accent', '#6d5dfc');
+  document.documentElement.style.setProperty('--accent-dim', 'rgba(109,93,252,0.12)');
+  renderSidebar(); renderBrainstormPage(); closeSidebar();
+};
+
+function renderBrainstormPage() {
+  if (currentView.type !== 'brainstorm') return;
+  const area = document.getElementById('content-area');
+
+  area.innerHTML = `
+    <div class="home-wrap">
+      <div class="tl-header">💡 Brainstorm</div>
+      <div class="tl-sub">Dump an idea here the second you have it — a link, a tab's worth of thinking, anything. Beats losing it when a tab closes.</div>
+
+      <div class="tl-quickadd">
+        <input class="input-field" id="brain-text" placeholder="What's the idea?"/>
+        <input class="input-field" id="brain-link" placeholder="Link (optional)" style="flex:1;min-width:160px"/>
+        <button class="btn-primary" id="brain-add-btn">Add</button>
+      </div>
+
+      <div id="brain-list"></div>
+    </div>
+  `;
+
+  const list = [...brainstormIdeas].sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0));
+  const listEl = document.getElementById('brain-list');
+  if (!list.length) {
+    listEl.innerHTML = '<div class="empty-line">Nothing here yet — add your first idea above.</div>';
+  } else {
+    listEl.innerHTML = '';
+    list.forEach(idea => {
+      const row = document.createElement('div');
+      row.className = 'brain-item';
+      let host = '';
+      if (idea.url) { try { host = new URL(idea.url).hostname.replace('www.',''); } catch {} }
+      const when = idea.createdAt?.seconds ? new Date(idea.createdAt.seconds * 1000).toLocaleDateString('en-AU', { day:'numeric', month:'short' }) : '';
+      row.innerHTML = `
+        <div style="flex:1">
+          <div class="brain-text">${esc(idea.text)}</div>
+          ${idea.url ? `<a class="brain-link" href="${esc(idea.url)}" target="_blank" rel="noopener">${esc(host || idea.raw || idea.url)}</a>` : ''}
+          ${when ? `<div class="brain-time">${when}</div>` : ''}
+        </div>
+        <div class="brain-actions">
+          ${idea.url ? `<button class="icon-btn" data-action="copy" data-url="${esc(idea.raw||idea.url)}" title="Copy link">Copy</button>` : ''}
+          <button class="icon-btn" data-action="delete" data-id="${idea.id}">✕</button>
+        </div>
+      `;
+      listEl.appendChild(row);
+    });
+    listEl.onclick = e => {
+      const btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      if (btn.dataset.action === 'copy') {
+        navigator.clipboard.writeText(btn.dataset.url).then(() => showToast('Link copied')).catch(() => showToast('Could not copy'));
+      } else if (btn.dataset.action === 'delete') {
+        deleteDoc(dref('brainstorm', btn.dataset.id));
+        showToast('Removed');
+      }
+    };
+  }
+
+  const submit = async () => {
+    const textEl = document.getElementById('brain-text');
+    const linkEl = document.getElementById('brain-link');
+    const text = textEl.value.trim();
+    if (!text) return;
+    let url = null, raw = null;
+    if (linkEl.value.trim()) {
+      raw = linkEl.value.trim();
+      url = normalizeUrl(raw);
+    }
+    await addDoc(col('brainstorm'), { text, url, raw, createdAt: serverTimestamp() });
+    textEl.value = ''; linkEl.value = '';
+    showToast('Idea saved');
+  };
+  document.getElementById('brain-add-btn').onclick = submit;
+  document.getElementById('brain-text').onkeydown = e => { if (e.key==='Enter') submit(); };
+  document.getElementById('brain-link').onkeydown = e => { if (e.key==='Enter') submit(); };
 }
 
 function loadGlobalTodoList() {
