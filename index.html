@@ -581,6 +581,8 @@
     .brain-notes { font-size: 12px; color: var(--text-sub); margin-top: 6px; line-height: 1.5; white-space: pre-wrap; }
     .brain-time { font-size: 10px; color: var(--text-muted); margin-top: 4px; }
     .brain-actions { display: flex; gap: 2px; flex-shrink: 0; }
+    .proj-card.drag-target { border-color: var(--accent); background: var(--accent-dim); box-shadow: 0 0 0 2px var(--accent); }
+    .brain-folder-idea { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 12px 14px; margin-bottom: 6px; }
 
     /* ── VAULT ── */
     .vault-card { background: var(--surface); border: 1px solid var(--border2); border-radius: var(--r-lg); padding: 24px; max-width: 380px; }
@@ -2086,9 +2088,11 @@ function renderBrainstormPage() {
 function renderBrainstormList() {
   const listEl = document.getElementById('brain-list');
   if (!listEl) return;
-  const list = [...brainstormIdeas].sort((a,b) => (a.order ?? 999999) - (b.order ?? 999999));
+  const list = brainstormIdeas.filter(i => !i.folderId).sort((a,b) => (a.order ?? 999999) - (b.order ?? 999999));
   if (!list.length) {
-    listEl.innerHTML = '<div class="empty-line">Nothing here yet — add your first idea above.</div>';
+    listEl.innerHTML = brainstormIdeas.length
+      ? '<div class="empty-line">Everything\'s grouped into folders below.</div>'
+      : '<div class="empty-line">Nothing here yet — add your first idea above.</div>';
     return;
   }
   listEl.innerHTML = '';
@@ -2186,11 +2190,12 @@ function renderBrainstormFolderGrid() {
   grid.innerHTML = '';
 
   brainstormFolders.forEach(f => {
+    const groupedCount = brainstormIdeas.filter(i => i.folderId === f.id).length;
     const card = document.createElement('div');
     card.className = 'proj-card';
     card.innerHTML = `
       <div class="proj-card-name">${esc(f.name)}</div>
-      <div class="proj-card-sub">Saved tabs</div>
+      <div class="proj-card-sub">${groupedCount ? `${groupedCount} idea${groupedCount>1?'s':''} grouped` : 'Drag an idea here, or add links'}</div>
       <button class="proj-card-del" data-id="${f.id}" data-name="${esc(f.name)}">✕</button>
     `;
     card.onclick = e => {
@@ -2204,6 +2209,18 @@ function renderBrainstormFolderGrid() {
         showToast('Folder deleted');
       }
     };
+    card.addEventListener('dragover', e => { if (draggedBrainId) { e.preventDefault(); card.classList.add('drag-target'); } });
+    card.addEventListener('dragleave', () => card.classList.remove('drag-target'));
+    card.addEventListener('drop', e => {
+      e.preventDefault();
+      card.classList.remove('drag-target');
+      if (draggedBrainId) {
+        updateDoc(dref('brainstorm', draggedBrainId), { folderId: f.id })
+          .then(() => showToast(`Added to "${f.name}"`))
+          .catch(() => showToast('Could not move idea'));
+        draggedBrainId = null;
+      }
+    });
     grid.appendChild(card);
   });
 
@@ -2237,8 +2254,18 @@ function renderBrainstormFolderPage() {
   area.innerHTML = `
     <div class="home-wrap">
       <button class="proj-back-btn" id="brain-folder-back-btn">← Back to Brainstorm</button>
-      <div class="tl-header">${esc(folder.name)}</div>
-      <div class="tl-sub">Every tab/link for this idea, kept together.</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="tl-header" style="margin-bottom:0">${esc(folder.name)}</div>
+        <button class="icon-btn" id="brain-folder-rename-btn" title="Rename folder">Rename</button>
+      </div>
+      <div class="tl-sub">Every idea and tab/link for this, kept together.</div>
+
+      <div class="section">
+        <div class="section-header">
+          <span class="section-label">Grouped Ideas</span>
+        </div>
+        <div id="brain-folder-ideas"></div>
+      </div>
 
       <div class="section">
         <div class="section-header">
@@ -2252,7 +2279,64 @@ function renderBrainstormFolderPage() {
 
   document.getElementById('brain-folder-back-btn').onclick = window.goBrainstorm;
   document.getElementById('brain-folder-add-link-btn').onclick = () => addLinkItem(folder.id);
+  document.getElementById('brain-folder-rename-btn').onclick = () => renameBrainstormFolder(folder);
   loadLinks(folder.id);
+  renderBrainstormFolderIdeas(folder.id);
+}
+
+function renameBrainstormFolder(folder) {
+  openModal('Rename Folder', [
+    { type:'input', id:'name', placeholder:'Folder name' }
+  ], 'Save', async vals => {
+    if (!vals.name) return;
+    await updateDoc(dref('brainstormFolders', folder.id), { name: vals.name });
+    showToast('Folder renamed');
+  });
+  setTimeout(() => {
+    const input = document.querySelector('#modal-body input');
+    if (input) input.value = folder.name || '';
+  }, 0);
+}
+
+function renderBrainstormFolderIdeas(folderId) {
+  const el = document.getElementById('brain-folder-ideas');
+  if (!el) return;
+  const ideas = brainstormIdeas.filter(i => i.folderId === folderId).sort((a,b) => (a.order ?? 999999) - (b.order ?? 999999));
+  if (!ideas.length) {
+    el.innerHTML = '<div class="empty-line">No ideas grouped in here yet — drag one onto this folder from the Brainstorm page.</div>';
+    return;
+  }
+  el.innerHTML = '';
+  ideas.forEach(idea => {
+    let host = '';
+    if (idea.url) { try { host = new URL(idea.url).hostname.replace('www.',''); } catch {} }
+    const row = document.createElement('div');
+    row.className = 'brain-folder-idea';
+    row.innerHTML = `
+      <div class="brain-text">${esc(idea.text)}</div>
+      ${idea.url ? `<a class="brain-link" href="${esc(idea.url)}" target="_blank" rel="noopener">${esc(host || idea.raw || idea.url)}</a>` : ''}
+      ${idea.notes ? `<div class="brain-notes">${esc(idea.notes)}</div>` : ''}
+      <div class="brain-actions" style="margin-top:8px">
+        <button class="icon-btn" data-action="edit" data-id="${idea.id}">Edit</button>
+        <button class="icon-btn" data-action="ungroup" data-id="${idea.id}">Ungroup</button>
+        <button class="icon-btn" data-action="delete" data-id="${idea.id}">✕</button>
+      </div>
+    `;
+    el.appendChild(row);
+  });
+  el.onclick = e => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    if (btn.dataset.action === 'edit') {
+      editBrainstormIdea(btn.dataset.id);
+    } else if (btn.dataset.action === 'ungroup') {
+      updateDoc(dref('brainstorm', btn.dataset.id), { folderId: null });
+      showToast('Moved back to Brainstorm');
+    } else if (btn.dataset.action === 'delete') {
+      deleteDoc(dref('brainstorm', btn.dataset.id));
+      showToast('Removed');
+    }
+  };
 }
 
 function loadGlobalTodoList() {
